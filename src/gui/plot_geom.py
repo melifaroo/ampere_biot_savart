@@ -1,21 +1,19 @@
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import Frame
+import logic.presentation as presentation
+from logic.geometry import Geometry
 
-class PlotArea(Frame):
+class PlotGeomArea(Frame):
     def __init__(self, master):
         super().__init__(master)  # Initialize as a Frame
-        self.figure, self.ax = plt.subplots()
+        self.figure = plt.figure()
+        self.ax = plt.subplot(projection='3d')
         self.canvas = FigureCanvasTkAgg(self.figure, self)
         self.canvas.get_tk_widget().pack(fill='both', expand=True)
 
-    def update_plot(self, T, I, Bx, By, Bz, Fx, Fy, Fz):
+    def update_plot(self, g : Geometry):
         self.ax.clear()
-        self.ax.plot(T, Bx, label='Bx')
-        self.ax.plot(T, By, label='By')
-        self.ax.plot(T, Bz, label='Bz')
-        self.ax.set_title('Magnetic Field Components')
-        self.ax.set_xlabel('Time (s)')
-        self.ax.set_ylabel('Magnetic Field (T)')
-        self.ax.legend()
+        if not g is None:
+            presentation.plotGeometry(g, self.ax)
         self.canvas.draw()

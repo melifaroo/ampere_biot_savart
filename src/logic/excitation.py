@@ -3,24 +3,35 @@ from numpy import atan, sin, pi, exp
 from dataclasses import dataclass
 
 @dataclass  
-class Exitation:
+class Excitation:
+    current: float
     T: float
-    I: float
+    I: float   
+    K: float
+    asymK : float = 0                           
+        
     def __init__(self, T, I):
-        if not( (T.shape[0]==I.shape[1]) ):
+        if not( (T.shape==I.shape) ) and not( (T.shape[0]==I.shape[1]) ):
             exit('Exit on error: Exitation definition - Input vectors dimensions must agree')     
         self.T = T
-        self.I = I
+        self.current = I
+
+def current_gen(T, Isc, omega, tau, alpha, phi):    
+    [j, t] = np.meshgrid([1,2,3], T, indexing='ij')
+    return Isc*2**0.5*(sin( omega*t + alpha - phi - 2*pi/3 * (j - 1) ) - exp( -t / tau ) * sin( alpha - phi - 2*pi/3 * (j - 1) ) )
+    
+def current_rlc(t, I0, omega, tau, delta):
+    return I0*exp(-(t-delta)/tau)*sin(omega*(t-delta))*(t>delta)
+    
+def build(TIME, T_SIZE : int, I , current = "rms", type = "const"):
         
-def current_gen(t, j, Isc, omega, tau, alpha, phi):
-    N = j.shape[0]
-    return Isc*2**0.5*(sin( omega*t + alpha - phi - 2*pi/N * (j - 1) ) - exp( -t / tau ) * sin( alpha - phi - 2*pi/N * (j - 1) ) )
-    
-def current_rlc(t, k, I0, omega, tau, delta):
-    return I0*exp(-(t-delta)/tau)*sin(omega*(t-delta))*k*(t>delta)
-    
-def build(TIME, T_SIZE, NPhases, Isc, shape, Kd = 0):
-    # Isc = 31.5
+    valid_types  = {"const", "rlc", "gen"}
+    if type not in valid_types:
+        raise ValueError("error: Excitation.build - type must be one of %s." % valid_types)
+    valid_currents  = {"rms", "peak"}
+    if current not in valid_currents:
+        raise ValueError("error: Excitation.build - type must be one of %s." % valid_types)
+        
     freq = 50
     tau = 45
     period = 1000/freq
@@ -28,32 +39,31 @@ def build(TIME, T_SIZE, NPhases, Isc, shape, Kd = 0):
     alpha = 0
     phi = atan(omega*tau)
     n = 1
-    Ip = Isc*2**0.5*(1 + exp( -n * period / tau / 2 ) )
+        
     tau0 = 27
     period0 = 1000/freq
     omega0 = 2*pi/period0
     delta = 5
-    I0 = Ip/exp(-period0/tau0/4)
-
-    N = np.linspace(1,NPhases,NPhases)
-    
-    K = np.linspace(1,NPhases,NPhases)
-    Kd = np.array([0, +1, -1])*Kd
-    for i in range(1,NPhases):
-        K[i] = 1/(NPhases-1)    
-    K = K + K*Kd[0:NPhases]
-    
+        
+    if current == "rms":
+        Isc = I
+        Ip = current_gen( (pi/2+phi)/omega, Isc, omega, tau, alpha, phi)[0]
+    elif current == "peak":
+        Ip = I
+        Isc = Ip / current_gen( (pi/2+phi)/omega, 1, omega, tau, alpha, phi)[0]
+        
+    t0 = atan(omega0*tau0)/omega0
+    I0 = Ip/( exp(-t0/tau0)*sin(omega0*t0) )
+           
     T = np.linspace(0,TIME,T_SIZE)
 
-    [n, t] = np.meshgrid(N, T, indexing='ij')
-    [k, t] = np.meshgrid(K, T, indexing='ij')
-    if shape == "const":
-        I = np.ones((NPhases, T_SIZE))*Ip
-    elif shape == "rlc":
-        I = current_rlc(t, k, I0, omega0, tau0, delta)
-    elif shape == "gen":
-        I = current_gen(t, n, Isc, omega, tau, alpha, phi)
+    if type == "const":
+        I = T*0+I
+    elif type == "rlc":
+        I = current_rlc(T, I0, omega0, tau0, delta)
+    elif type == "gen":
+        I = current_gen(T, Isc, omega, tau, alpha, phi)
     else:
-        return 
+        raise ValueError("error: Excitation.build - type must be one of %s." % valid_types) 
     
-    return Exitation(T, I)
+    return Excitation(T, I*1000 )

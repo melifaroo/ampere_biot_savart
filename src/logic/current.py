@@ -1,6 +1,4 @@
 import numpy as np
-from scipy.integrate import odeint
-from scipy import interpolate
 import matplotlib.pyplot as plt
 from numpy import exp, sin, cos, pi, atan
 
