@@ -54,13 +54,16 @@ def evalBranchCurrents(geometry: Geometry, excitation : Excitation , peakPhaseNu
     
     N = geometry.getCircuitPhaseCount()
     
+    
     if (N<3):         
         excitation.K = np.array([1, -1])[:N,np.newaxis]
     else:
         excitation.K = np.array([1, -0.5, -0.5])[:N,np.newaxis]   
         excitation.K = np.roll(excitation.K, peakPhaseNumber, axis=0) 
-            
-        inductances = neumann3d(geometry, excitation)     
+    
+    inductances = neumann3d(geometry, excitation)         
+     
+    if (N==3):      
         i = np.delete(np.arange(3),np.where(excitation.K[:,0] == 1))
         j = i[::-1]
         
@@ -71,7 +74,6 @@ def evalBranchCurrents(geometry: Geometry, excitation : Excitation , peakPhaseNu
             excitation.K[i[1],0] = -(1 - asymK_override)/2
         
         excitation.asymK = ( - inductances.L[i[0]] + inductances.L[j[0]])/(inductances.L[i[0]] + inductances.L[j[0]])
-        excitation.inductances = inductances
         
     if (excitation.current.ndim == 1):
         excitation.I = np.repeat(excitation.current[np.newaxis,:], repeats=N, axis=0) 
@@ -81,6 +83,8 @@ def evalBranchCurrents(geometry: Geometry, excitation : Excitation , peakPhaseNu
         excitation.I = np.multiply(excitation.I, excitation.K) 
     else:
         excitation.I = np.roll(excitation.current, peakPhaseNumber, axis=0)
+        
+    return inductances
  
 def fun(y,a,c):
     return mpmath.ellippi(1-c**2/a**2, arctan2(y, c), 0) 
@@ -114,66 +118,63 @@ def _biotsavart3d(T, I, XS, XE, YS, YE, ZS, ZE, N3ph, X, Y, Z):
     [z, _, z1] = np.meshgrid(Z, T, ZS, indexing='ij')
     [z, _, z2] = np.meshgrid(Z, T, ZE, indexing='ij')
     [_, nt, nc] = np.meshgrid(X, np.linspace(1, T.shape[0], T.shape[0])-1, N3ph, indexing='ij')
-    
-    # if (I.shape==T.shape):
-    #     i = I[nt.astype(int)]*K1ph[nc.astype(int)]
-    # else:    
+      
     i = I[nc.astype(int), nt.astype(int)]
+    
+    # Bx = 1e-7*i*(0
+    #         + (x1==x2)*(y1==y2)*(z1!=z2)*( y-y1 )/( (x-x1)**2+(y-y1)**2 )*(
+    #             + (z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )            
+    #         + (x1!=x2)*(y1==y2)*(z1==z2)*( 0 )
+    #         - (x1==x2)*(y1!=y2)*(z1==z2)*( z-z1 )/( (z-z1)**2+(x-x1)**2 )*(
+    #             + (y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )
+    #     )
+        
+    # By = 1e-7*i*(0
+    #         - (x1==x2)*(y1==y2)*(z1!=z2)*( x-x1 )/( (x-x1)**2+(y-y1)**2 )*(
+    #             + (z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )
+    #         + (x1!=x2)*(y1==y2)*(z1==z2)*( z-z1 )/( (y-y1)**2+(z-z1)**2 )*(
+    #             + (x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )            
+    #         - (x1==x2)*(y1!=y2)*(z1==z2)*( 0 )
+    #     )
+        
+    # Bz = 1e-7*i*(0
+    #         + (x1==x2)*(y1==y2)*(z1!=z2)*( 0 )
+    #         - (x1!=x2)*(y1==y2)*(z1==z2)*( y-y1 )/( (y-y1)**2+(z-z1)**2 )*(
+    #             + (x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )
+    #         + (x1==x2)*(y1!=y2)*(z1==z2)*( x-x1 )/( (z-z1)**2+(x-x1)**2 )*(
+    #             + (y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
+    #             - (y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
+    #         )     
+    #     )
+    
+    Bx1 = +1* (x1==x2)*(y1==y2)*(z1!=z2)*( y-y1 )/( (x-x1)**2+(y-y1)**2 )*(z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; Bx1[np.isnan(Bx1)] = 0
+    Bx2 = -1* (x1==x2)*(y1==y2)*(z1!=z2)*( y-y1 )/( (x-x1)**2+(y-y1)**2 )*(z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; Bx2[np.isnan(Bx2)] = 0   
+    Bx3 = -1* (x1==x2)*(y1!=y2)*(z1==z2)*( z-z1 )/( (z-z1)**2+(x-x1)**2 )*(y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; Bx3[np.isnan(Bx3)] = 0
+    Bx4 = +1* (x1==x2)*(y1!=y2)*(z1==z2)*( z-z1 )/( (z-z1)**2+(x-x1)**2 )*(y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; Bx4[np.isnan(Bx4)] = 0
+    Bx = 1e-7*i*(Bx1 + Bx2 + Bx3 + Bx4)
+        
+    By1 = -1* (x1==x2)*(y1==y2)*(z1!=z2)*( x-x1 )/( (x-x1)**2+(y-y1)**2 )*(z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; By1[np.isnan(By1)] = 0
+    By2 = +1* (x1==x2)*(y1==y2)*(z1!=z2)*( x-x1 )/( (x-x1)**2+(y-y1)**2 )*(z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; By2[np.isnan(By2)] = 0
+    By3 = +1* (x1!=x2)*(y1==y2)*(z1==z2)*( z-z1 )/( (y-y1)**2+(z-z1)**2 )*(x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; By3[np.isnan(By3)] = 0
+    By4 = -1* (x1!=x2)*(y1==y2)*(z1==z2)*( z-z1 )/( (y-y1)**2+(z-z1)**2 )*(x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; By4[np.isnan(By4)] = 0
+    By = 1e-7*i*(By1 + By2 + By3 + By4)
+                
+    Bz1 = -1* (x1!=x2)*(y1==y2)*(z1==z2)*( y-y1 )/( (y-y1)**2+(z-z1)**2 )*(x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; Bz1[np.isnan(Bz1)] = 0
+    Bz2 = +1* (x1!=x2)*(y1==y2)*(z1==z2)*( y-y1 )/( (y-y1)**2+(z-z1)**2 )*(x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; Bz2[np.isnan(Bz2)] = 0
+    Bz3 = +1* (x1==x2)*(y1!=y2)*(z1==z2)*( x-x1 )/( (z-z1)**2+(x-x1)**2 )*(y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5; Bz3[np.isnan(Bz3)] = 0
+    Bz4 = -1* (x1==x2)*(y1!=y2)*(z1==z2)*( x-x1 )/( (z-z1)**2+(x-x1)**2 )*(y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5; Bz4[np.isnan(Bz4)] = 0 
+    Bz = 1e-7*i*(Bz1 + Bz2 + Bz3 + Bz4)
 
-    # lsq = ( (x2-x1)**2 + (y2-y1)**2 + (z2-z1)**2 )
-    # rho = ( (x2-x1)*(x-x1)+(y2-y1)*(y-y1)+(z2-z1)*(z-z1) )/lsq
-    # x0 = x1*(1-rho) + x2*rho
-    # y0 = y1*(1-rho) + y2*rho
-    # z0 = z1*(1-rho) + z2*rho
-    # hsq = ( (x0-x)**2 + (y0-y)**2 + (z0-z)**2 )
-    # sina1 = np.sign(  rho)*( ( ((y0-y)*(z1-z)-(z0-z)*(y1-y))**2 + ((z0-z)*(x1-x)-(x0-x)*(z1-z))**2 + ((x0-x)*(y1-y)-(y0-y)*(x1-x))**2 ) / (hsq*( (x1-x)**2 + (y1-y)**2 + (z1-z)**2 )) )**0.5
-    # sina2 = np.sign(1-rho)*( ( ((y0-y)*(z2-z)-(z0-z)*(y2-y))**2 + ((z0-z)*(x2-x)-(x0-x)*(z2-z))**2 + ((x0-x)*(y2-y)-(y0-y)*(x2-x))**2 ) / (hsq*( (x2-x)**2 + (y2-y)**2 + (z2-z)**2 )) )**0.5
-    # Bx = ( (y2-y1)*(z-z0)-(z2-z1)*(y-y0) )*1e-7*i/hsq/lsq**0.5*(sina1+sina2) 
-    # By = ( (z2-z1)*(x-x0)-(x2-x1)*(z-z0) )*1e-7*i/hsq/lsq**0.5*(sina1+sina2)
-    # Bz = ( (x2-x1)*(y-y0)-(y2-y1)*(x-x0) )*1e-7*i/hsq/lsq**0.5*(sina1+sina2)
-    
-    Bx = 1e-7*i*(0
-            + (x1==x2)*(y1==y2)*(z1!=z2)*( y-y1 )/( (x-x1)**2+(y-y1)**2 )*(
-                + (z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )            
-            + (x1!=x2)*(y1==y2)*(z1==z2)*( 0 )
-            - (x1==x2)*(y1!=y2)*(z1==z2)*( z-z1 )/( (z-z1)**2+(x-x1)**2 )*(
-                + (y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )
-        )
-    
-    
-    By = 1e-7*i*(0
-            - (x1==x2)*(y1==y2)*(z1!=z2)*( x-x1 )/( (x-x1)**2+(y-y1)**2 )*(
-                + (z-z2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (z-z1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )
-            + (x1!=x2)*(y1==y2)*(z1==z2)*( z-z1 )/( (y-y1)**2+(z-z1)**2 )*(
-                + (x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )            
-            - (x1==x2)*(y1!=y2)*(z1==z2)*( 0 )
-        )
-    
-    
-    Bz = 1e-7*i*(0
-            + (x1==x2)*(y1==y2)*(z1!=z2)*( 0 )
-            - (x1!=x2)*(y1==y2)*(z1==z2)*( y-y1 )/( (y-y1)**2+(z-z1)**2 )*(
-                + (x-x2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (x-x1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )
-            + (x1==x2)*(y1!=y2)*(z1==z2)*( x-x1 )/( (z-z1)**2+(x-x1)**2 )*(
-                + (y-y2)/( (x-x2)**2+(y-y2)**2+(z-z2)**2 )**0.5 
-                - (y-y1)/( (x-x1)**2+(y-y1)**2+(z-z1)**2 )**0.5
-            )     
-        )
-    
-    
-    Bx[np.isnan(Bx)] = 0
-    By[np.isnan(By)] = 0
-    Bz[np.isnan(Bz)] = 0
 
     Bx = np.sum(Bx, axis=2)
     By = np.sum(By, axis=2)
@@ -193,13 +194,13 @@ def ampere3d(geometry : Geometry, excitation : Excitation):
         geometry.YS, 
         geometry.YE, 
         geometry.ZS,
-        geometry.ZE, 
+        geometry.ZE,
+        geometry.R,
         geometry.Nph,
-        geometry.NF,
-        geometry.r)
+        geometry.NF)
     return Forces(Fx, Fy, Fz)
 
-def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, N3ph, NF, r=0.1):
+def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     if not( (XS.shape==XE.shape) & (YS.shape==YE.shape) & (ZS.shape==ZE.shape) &
         (XS.shape==YS.shape) & (XS.shape==ZS.shape) & (XS.shape==N3ph.shape)  ):
         exit('Exit on error: ampere3d - Input vectors dimensions must agree')     
@@ -210,13 +211,10 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, N3ph, NF, r=0.1):
     [ye_1, _, ye_2] = np.meshgrid(YE, T, YE, indexing='ij')
     [zs_1, _, zs_2] = np.meshgrid(ZS, T, ZS, indexing='ij')
     [ze_1, _, ze_2] = np.meshgrid(ZE, T, ZE, indexing='ij')
+    [ r_1, _,  r_2] = np.meshgrid(R , T, R , indexing='ij')
         
     [nc1, nt, nc2] = np.meshgrid(N3ph, np.linspace(1, T.shape[0], T.shape[0])-1, N3ph, indexing='ij')
-    
-    # if (I.shape==T.shape):
-    #     i_1 = I[nt.astype(int)]*K1ph[nc1.astype(int)]
-    #     i_2 = I[nt.astype(int)]*K1ph[nc2.astype(int)]
-    # else:    
+      
     i_1 = I[nc1.astype(int), nt.astype(int)]
     i_2 = I[nc2.astype(int), nt.astype(int)]
 
@@ -247,12 +245,9 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, N3ph, NF, r=0.1):
     condX = (L1x!=0)*(L2x!=0)*(L1y==0)*(L2y==0)*(L1z==0)*(L2z==0)#параллельные сегменты вдоль X  
     condY = (L1x==0)*(L2x==0)*(L1y!=0)*(L2y!=0)*(L1z==0)*(L2z==0)#параллельные сегменты вдоль Y  
     condZ = (L1x==0)*(L2x==0)*(L1y==0)*(L2y==0)*(L1z!=0)*(L2z!=0)#параллельные сегменты вдоль Z
-    fx1 = + (SE-SS+ES-EE)*SSx*(condZ/( SSy**2 + SSx**2 )\
-                                +condY/( SSz**2 + SSx**2 ))
-    fy1 = + (SE-SS+ES-EE)*SSy*(condZ/( SSy**2 + SSx**2 )\
-                                +condX/( SSz**2 + SSy**2 ))
-    fz1 = + (SE-SS+ES-EE)*SSz*(condY/( SSz**2 + SSx**2 )\
-                                +condX/( SSz**2 + SSy**2 ))
+    fx1 = + (SE-SS+ES-EE)*SSx*(condZ/( SSy**2 + SSx**2 ) + condY/( SSz**2 + SSx**2 ))
+    fy1 = + (SE-SS+ES-EE)*SSy*(condZ/( SSy**2 + SSx**2 ) + condX/( SSz**2 + SSy**2 ))
+    fz1 = + (SE-SS+ES-EE)*SSz*(condY/( SSz**2 + SSx**2 ) + condX/( SSz**2 + SSy**2 ))
    
     fx1[np.isnan(fx1)]=0
     fy1[np.isnan(fy1)]=0
@@ -270,13 +265,13 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, N3ph, NF, r=0.1):
 
 
     # condZX*np.sign(-L2x)
-    fx2 = (condZX+condYX)*( log( caf(SS,SSx,r) ) - log( caf(ES,ESx,r) ) - log( caf(SE,SEx,r) ) + log( caf(EE,EEx,r) )) 
+    fx2 = (condZX+condYX)*( log( caf(SS,SSx,r_2) ) - log( caf(ES,ESx,r_2) ) - log( caf(SE,SEx,r_2) ) + log( caf(EE,EEx,r_2) )) 
     
         # condXY*np.sign(-L2y)
-    fy2 = (condXY+condZY)*( log( caf(SS,SSy,r) ) - log( caf(ES,ESy,r) ) - log( caf(SE,SEy,r) ) + log( caf(EE,EEy,r) )) 
+    fy2 = (condXY+condZY)*( log( caf(SS,SSy,r_2) ) - log( caf(ES,ESy,r_2) ) - log( caf(SE,SEy,r_2) ) + log( caf(EE,EEy,r_2) )) 
     
         # condYZ*np.sign(-L2z)
-    fz2 = (condYZ+condXZ)*( log( caf(SS,SSz,r) ) - log( caf(ES,ESz,r) ) - log( caf(SE,SEz,r) ) + log( caf(EE,EEz,r) ))
+    fz2 = (condYZ+condXZ)*( log( caf(SS,SSz,r_2) ) - log( caf(ES,ESz,r_2) ) - log( caf(SE,SEz,r_2) ) + log( caf(EE,EEz,r_2) ))
 
 
     fx2[np.isnan(fx2)]=0
@@ -322,13 +317,13 @@ def neumann3d(geometry : Geometry, excitation: Excitation):
         geometry.YE, 
         geometry.ZS,
         geometry.ZE, 
+        geometry.R,
         geometry.Nph,
-        geometry.NL,
-        geometry.r
+        geometry.NL
         )
     return Inductances(L)
 
-def _neumann3d(K, XS, XE, YS, YE, ZS, ZE, N3ph, NL, r = 0.02):
+def _neumann3d(K, XS, XE, YS, YE, ZS, ZE, R, N3ph, NL):
     
     [xs_1, xs_2] = np.meshgrid(XS, XS, indexing='ij')
     [xe_1, xe_2] = np.meshgrid(XE, XE, indexing='ij')
@@ -384,7 +379,7 @@ def _neumann3d(K, XS, XE, YS, YE, ZS, ZE, N3ph, NL, r = 0.02):
     condY = (L1x==0)*(L2x==0)*(L1y!=0)*(L2y!=0)*(L1z==0)*(L2z==0)#параллельные сегменты вдоль Y  
     condZ = (L1x==0)*(L2x==0)*(L1y==0)*(L2y==0)*(L1z!=0)*(L2z!=0)#параллельные сегменты вдоль Z
     
-    Self = 2*1e-7*( L*log( 2*L/r ) - L*1 )
+    Self = 2*1e-7*( L*log( 2*L/R ) - L*1 )
     
        
     mutualx = +np.sign(k1*k2)*1* 1e-7*condX*( + ESx*log( ESx + ESxyz ) - ESxyz

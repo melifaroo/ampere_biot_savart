@@ -37,13 +37,13 @@ def change_lightness(color, lightness=0.5):
 
 
 def plotCurrent(e : Excitation, ax : plt.axes.__class__, fig : plt.figure.__class__ = None):
-    plt.xlim([0,e.T[-1]])
-    plt.grid(True)
+    ax.set_xlim([0,e.T[-1]])
+    ax.grid(True)
     colors = ['r', 'b', 'g']; labels = ['A', 'B', 'C']
     C = e.I.shape[0]
 
     for i in range(C):
-        plt.plot(e.T, e.I[i,:]/1000 ,colors[i]+'-', linewidth=2.0)
+        ax.plot(e.T, e.I[i,:]/1000 ,colors[i]+'-', linewidth=2.0)
             
     if not fig == None:
         renderer = fig.canvas.get_renderer()
@@ -55,8 +55,8 @@ def plotCurrent(e : Excitation, ax : plt.axes.__class__, fig : plt.figure.__clas
     else:
         labelpad = 0
         
-    plt.ylabel("ток [кА] ", loc="top", labelpad=labelpad)
-    plt.legend(labels[0:C], loc = 'upper right') 
+    ax.set_ylabel("ток [кА] ", loc="top", labelpad=labelpad)
+    ax.legend(labels[0:C], loc = 'upper right') 
 
 def plotGeometry(g : Geometry, ax : plt.axes.__class__):
     colors = ['m', 'c', 'y']    
@@ -99,7 +99,7 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
     N = r.forces.Fx.shape[0]  
      
     if grid == None:    
-        grid = plt.GridSpec(max(3, (M + C - 1) // C + (N + C - 1) // C ),2+C, wspace=0.3, hspace=0.2, left=0.05, right=0.95, top=0.95, bottom = 0.05)
+        grid = plt.GridSpec(max(2, (M + C - 1) // C + (N + C - 1) // C ), C, wspace=0.3, hspace=0.2, left=0.05, right=0.95, top=0.95, bottom = 0.05)
                 
     #fields 
     colors = ['m', 'c', 'y']
@@ -108,7 +108,7 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
 
     for i in range(M):
         ax = plt.subplot(grid[i%(M//C),first_col + i//(M//C)])
-        plt.xlim([0, r.times[-1]])
+        ax.set_xlim([0, r.times[-1]])
         
         val_min = min( r.fields.Bax.min(), r.fields.Btr.min()  )*1000
         val_min_dig = np.ceil ( log10(abs(val_min)) )
@@ -117,12 +117,12 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
         ymin = np.floor( val_min/0.2 )*0.2
         ymax = np.ceil(  val_max/0.2 )*0.2
         
-        plt.ylim([ymin, ymax]) 
-        plt.grid(True)
-        plt.title(titles[i])
-        plt.plot(r.times, r.fields.Bmag[i,:]*1000 ,colors[i%3]+'-', linewidth=2.0)
-        plt.plot(r.times, r.fields.Bax[i,:]*1000 ,colors[i%3]+'--', linewidth=2.0)
-        plt.plot(r.times, r.fields.Btr[i,:]*1000 ,colors[i%3]+':', linewidth=2.0)
+        ax.set_ylim([ymin, ymax]) 
+        ax.grid(True)
+        ax.set_title(titles[i])
+        ax.plot(r.times, r.fields.Bmag[i,:]*1000 ,colors[i%3]+'-', linewidth=2.0)
+        ax.plot(r.times, r.fields.Bax[i,:]*1000 ,colors[i%3]+'--', linewidth=2.0)
+        ax.plot(r.times, r.fields.Btr[i,:]*1000 ,colors[i%3]+':', linewidth=2.0)
         
 
         tick_widths = [
@@ -132,8 +132,8 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
         labelpad = -max_tick_width-10   # Convert from points to inches
 
         
-        plt.ylabel("поле [мТл] ", loc="top", labelpad=labelpad); 
-        plt.legend(labels, loc = 'lower right')    
+        ax.set_ylabel("поле [мТл] ", loc="top", labelpad=labelpad); 
+        ax.legend(labels, loc = 'lower right')    
                       
     #forces 
     labels = ['x','y','z']    
@@ -144,18 +144,18 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
         
         lightness=( i%(N//C)+1 )/(1 + N//C)
         color=change_lightness(colors[c%3], lightness=lightness)
-        ax = plt.subplot(grid[j, 2 + c ])
-        plt.xlim([0,r.times[-1]])
+        ax = plt.subplot(grid[j, c ])
+        ax.set_xlim([0,r.times[-1]])
         
         ymin = np.floor( min( r.forces.Fx.min(), r.forces.Fy.min(), r.forces.Fz.min()  )*10 )/100
         ymax = np.ceil( max( r.forces.Fx.max(), r.forces.Fy.max(), r.forces.Fz.max()  )*10 )/100
         
-        plt.ylim([ymin, ymax])
+        ax.set_ylim([ymin, ymax])
         
-        plt.grid(True)
-        plt.plot(r.times, r.forces.Fx[i,:]/10 ,'-', linewidth=2.0, color=color)
-        plt.plot(r.times, r.forces.Fy[i,:]/10 ,'--', linewidth=2.0, color=color)
-        plt.plot(r.times, r.forces.Fz[i,:]/10 ,':', linewidth=2.0, color=color)
+        ax.grid(True)
+        ax.plot(r.times, r.forces.Fx[i,:]/10 ,'-', linewidth=2.0, color=color)
+        ax.plot(r.times, r.forces.Fy[i,:]/10 ,'--', linewidth=2.0, color=color)
+        ax.plot(r.times, r.forces.Fz[i,:]/10 ,':', linewidth=2.0, color=color)
         
         tick_widths = [
             label.get_window_extent(renderer).width for label in ax.get_yticklabels() if label.get_text()
@@ -163,9 +163,17 @@ def plotResults(r: Results, fig : plt.figure.__class__ = None, grid = None, C = 
         max_tick_width = max(tick_widths) if tick_widths else 0
         labelpad = -max_tick_width-10   # Convert from points to inches
         
-        plt.ylabel("сила [кгс] ", loc="top", labelpad=labelpad); 
+        ax.set_ylabel("сила [кгс] ", loc="top", labelpad=labelpad); 
         
-        plt.legend(labels, loc = 'lower right')    
+        ax.legend(labels, loc = 'lower right')    
+        
+    window = plt.get_current_fig_manager().window
+    screen_x, screen_y = window.wm_maxsize()
+    fig.set_size_inches([screen_x/fig.dpi, screen_y/fig.dpi-3]) 
+    window.wm_geometry("+0+0")
+        
+    fig.show()
+        
         
 def plot(g : Geometry, e: Excitation, r: Results, Exit = True ):    
 

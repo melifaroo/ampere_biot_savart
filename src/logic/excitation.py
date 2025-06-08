@@ -8,7 +8,7 @@ class Excitation:
     T: float
     I: float   
     K: float
-    asymK : float = 0                           
+    asymK : float = 0                       
         
     def __init__(self, T, I):
         if not( (T.shape==I.shape) ) and not( (T.shape[0]==I.shape[1]) ):
@@ -23,27 +23,21 @@ def current_gen(T, Isc, omega, tau, alpha, phi):
 def current_rlc(t, I0, omega, tau, delta):
     return I0*exp(-(t-delta)/tau)*sin(omega*(t-delta))*(t>delta)
     
-def build(TIME, T_SIZE : int, I , current = "rms", type = "const"):
+def build(TIME, T_SIZE : int, I, current = "peak", source_type = "gen", freq = 50, delta = 5, tau = None):
         
-    valid_types  = {"const", "rlc", "gen"}
-    if type not in valid_types:
+    valid_types  = {"rlc", "gen"}
+    if source_type not in valid_types:
         raise ValueError("error: Excitation.build - type must be one of %s." % valid_types)
     valid_currents  = {"rms", "peak"}
     if current not in valid_currents:
         raise ValueError("error: Excitation.build - type must be one of %s." % valid_types)
-        
-    freq = 50
-    tau = 45
+    if (tau == None):
+        tau = (45 if source_type=="gen" else 27)
+            
     period = 1000/freq
     omega = 2*pi/period
     alpha = 0
-    phi = atan(omega*tau)
-    n = 1
-        
-    tau0 = 27
-    period0 = 1000/freq
-    omega0 = 2*pi/period0
-    delta = 5
+    phi = atan(omega*tau)       
         
     if current == "rms":
         Isc = I
@@ -52,16 +46,14 @@ def build(TIME, T_SIZE : int, I , current = "rms", type = "const"):
         Ip = I
         Isc = Ip / current_gen( (pi/2+phi)/omega, 1, omega, tau, alpha, phi)[0]
         
-    t0 = atan(omega0*tau0)/omega0
-    I0 = Ip/( exp(-t0/tau0)*sin(omega0*t0) )
+    t0 = atan(omega*tau)/omega
+    I0 = Ip/( exp(-t0/tau)*sin(omega*t0) )
            
     T = np.linspace(0,TIME,T_SIZE)
 
-    if type == "const":
-        I = T*0+I
-    elif type == "rlc":
-        I = current_rlc(T, I0, omega0, tau0, delta)
-    elif type == "gen":
+    if  source_type == "rlc":
+        I = current_rlc(T, I0, omega, tau, delta)
+    elif source_type == "gen":
         I = current_gen(T, Isc, omega, tau, alpha, phi)
     else:
         raise ValueError("error: Excitation.build - type must be one of %s." % valid_types) 

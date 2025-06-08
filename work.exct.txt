@@ -1,0 +1,8 @@
+Duration = 20.0
+Discret = 21
+Current = 1.0
+Current_value_type = Peak
+Source_type = RLC 1Ph Circuit
+K_value_override = 0.0
+K_override = False
+Schema = A(BC)
