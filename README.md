@@ -1,6 +1,6 @@
-# GUI Current Control Application
+# Ampere Biot-Savart Nuemann Application (GUI)
 
-This project is a GUI application designed to control and visualize electrical current parameters. It allows users to set up the current \( I \), choose the type of excitation (either RLC or real), and adjust the \( Kd \) coefficient. The application automatically updates the plot based on the changes made in the controls.
+This project is an application designed to calculate ampere-forces, magnetic fields and branch impedances for given geometry of circuit (1 phase - 3 phase). It allows users to set up the circuit geometry, short-ciruit current (time-dependent), choose the type of excitation (RLC or 3-phase generator). The application automatically updates the plot based on the changes made in the controls.
 
 ## Project Structure
 
@@ -10,15 +10,19 @@ gui-current-control
 │   ├── main.py                # Entry point of the application
 │   ├── gui
 │   │   ├── app.py             # Main application class
-│   │   ├── controls.py        # Control panel for user inputs
-│   │   └── plot.py            # Plotting results
+│   │   ├── controls_geom.py   # Control panel for user inputs of geometry
+│   │   ├── controls_exct.py   # Control panel for user inputs of currents
+│   │   └── plot_geom.py       # Plotting panel for geometry
+│   │   └── plot_exct.py       # Plotting panel for currents
 │   ├── logic
-│   │   ├── calculations.py     # Calculation functions
-│   │   └── data.py            # Data management
-│   └── assets
-│       └── styles.css         # CSS styles for the GUI
-├── requirements.txt           # Project dependencies
-└── README.md                  # Project documentation
+│   │   ├── excittion.py      # Current model
+│   │   └── geometry.py       # Geometry model
+│   │   └── solution.py       # Calculation logic
+│   │   └── presentation.py   # Results plotting
+│   └── utils
+│       └── formats.py        # Formats convertor utils
+├── requirements.txt          # Project dependencies
+└── README.md                 # Project documentation
 ```
 
 ## Installation

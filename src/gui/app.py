@@ -1,4 +1,5 @@
 from tkinter import Tk, Frame
+import tkinter as tk
 from gui.controls_geom import ControlGeomPanel
 from gui.controls_exct import ControlExctPanel
 from gui.plot_geom import PlotGeomArea
@@ -18,22 +19,20 @@ class Application:
         container.rowconfigure(0, weight = 1)
         container.columnconfigure(0, weight = 1)
         
-        self.frame = Frame(container)
+        self.plot_frame = Frame(container)        
+        self.plot_geom_area = PlotGeomArea(self.plot_frame)        
+        self.plot_exct_area = PlotExctArea(self.plot_frame)        
+        self.ctrl_frame = Frame(container)  
+        self.control_geom_panel = ControlGeomPanel(self.ctrl_frame, self, self.update_geom_plot)        
+        self.control_exct_panel = ControlExctPanel(self.ctrl_frame, self, self.update_exct_plot)
         
-        self.frame.grid()
-
-        self.plot_geom_area = PlotGeomArea(self.frame)
-        self.plot_geom_area.grid(row=0, column=0, columnspan=2)
-        
-        self.plot_exct_area = PlotExctArea(self.frame)
-        self.plot_exct_area.grid(row=0, column=2, columnspan=2)
-        
-        self.control_geom_panel = ControlGeomPanel(self.frame, self, self.update_geom_plot)
-        self.control_geom_panel.grid(row=1, column=0, columnspan=3)
-                
-        self.control_exct_panel = ControlExctPanel(self.frame, self, self.update_exct_plot)
-        self.control_exct_panel.grid(row=1, column=3, columnspan=1)
-        
+        self.plot_frame.pack(side = tk.TOP, fill=tk.BOTH)
+        self.plot_geom_area.pack(side = tk.LEFT, fill=tk.BOTH)
+        self.plot_exct_area.pack(side = tk.RIGHT, fill=tk.BOTH, expand=True)
+        self.ctrl_frame.pack(side = tk.BOTTOM, fill=tk.BOTH)        
+        self.control_exct_panel.pack(side = tk.RIGHT, fill=tk.BOTH, expand=False)
+        self.control_geom_panel.pack(side = tk.RIGHT, fill=tk.BOTH, expand=True)
+                                
         self.control_geom_panel.update_plot()
         
     def save(self):
@@ -49,7 +48,6 @@ class Application:
     def update_exct_plot(self, e : Excitation):
 
         # print("Update plot called: %s" % traceback.format_stack()[-1].splitlines()[0] )
-        if  hasattr(self.control_geom_panel, 'geometry'):
-            self.plot_exct_area.update_plot(e, self.control_geom_panel.geometry)
+        self.plot_exct_area.update_plot(e, self.control_geom_panel.geometry)
         
         

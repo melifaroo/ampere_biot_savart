@@ -16,6 +16,7 @@ class PlotExctArea(Frame):
       
     def update_plot(self, e : Excitation, g : Geometry):
         self.ax.cla()
-        presentation.plotCurrent(e, self.ax, self.figure)
+        if not g is None:
+            presentation.plotCurrent(e, self.ax, self.figure)
         self.canvas.draw()
         # print("Update plot completed: %s, axes %s, figure %s" % (  traceback.format_stack()[-1].splitlines()[0], self.ax  , self.figure  ))

@@ -5,7 +5,6 @@ from logic.geometry import Geometry
 from logic.excitation import Excitation
 from dataclasses import dataclass
 
-
 @dataclass
 class Inductances:
     def __init__(self, L = np.array([])):
@@ -13,10 +12,11 @@ class Inductances:
         
 @dataclass
 class Forces:
-    def __init__(self, Fx = np.array([]), Fy = np.array([]), Fz = np.array([])):
+    def __init__(self, Fx = np.array([]), Fy = np.array([]), Fz = np.array([]), N = np.array([])):
         self.Fx = Fx
         self.Fy = Fy
         self.Fz = Fz
+        self.N = N
         
 @dataclass
 class Fields:
@@ -30,6 +30,7 @@ class Fields:
         
 @dataclass
 class Results:
+    phases : int
     forces : Forces
     fields : Fields    
     times  : float
@@ -186,7 +187,7 @@ def caf(A, X, r):
     return (A-X)*((A-X)!=0) + ( 1/2*r**2/( A + r*(A==0) ) )*((A-X)==0)*(A!=0) + r*((A-X)==0)*(A==0)
 
 def ampere3d(geometry : Geometry, excitation : Excitation):
-    [Fx, Fy, Fz] = _ampere3d(
+    [Fx, Fy, Fz, N] = _ampere3d(
         excitation.T, 
         excitation.I, 
         geometry.XS, 
@@ -198,7 +199,7 @@ def ampere3d(geometry : Geometry, excitation : Excitation):
         geometry.R,
         geometry.Nph,
         geometry.NF)
-    return Forces(Fx, Fy, Fz)
+    return Forces(Fx, Fy, Fz, N)
 
 def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     if not( (XS.shape==XE.shape) & (YS.shape==YE.shape) & (ZS.shape==ZE.shape) &
@@ -263,16 +264,9 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     condZX = (L1x==0)*(L1y==0)*(L1z!=0)*   (L2x!=0)*(L2y==0)*(L2z==0) 
     condZY = (L1x==0)*(L1y==0)*(L1z!=0)*   (L2x==0)*(L2y!=0)*(L2z==0)  #скрещенные сегменты
 
-
-    # condZX*np.sign(-L2x)
     fx2 = (condZX+condYX)*( log( caf(SS,SSx,r_2) ) - log( caf(ES,ESx,r_2) ) - log( caf(SE,SEx,r_2) ) + log( caf(EE,EEx,r_2) )) 
-    
-        # condXY*np.sign(-L2y)
     fy2 = (condXY+condZY)*( log( caf(SS,SSy,r_2) ) - log( caf(ES,ESy,r_2) ) - log( caf(SE,SEy,r_2) ) + log( caf(EE,EEy,r_2) )) 
-    
-        # condYZ*np.sign(-L2z)
     fz2 = (condYZ+condXZ)*( log( caf(SS,SSz,r_2) ) - log( caf(ES,ESz,r_2) ) - log( caf(SE,SEz,r_2) ) + log( caf(EE,EEz,r_2) ))
-
 
     fx2[np.isnan(fx2)]=0
     fy2[np.isnan(fy2)]=0
@@ -288,25 +282,71 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     fx = fx*1e-7*i_2*i_1
     fy = fy*1e-7*i_2*i_1
     fz = fz*1e-7*i_2*i_1
-        
-    FX = np.sum(fx, axis=2)
-    FY = np.sum(fy, axis=2)
-    FZ = np.sum(fz, axis=2) 
 
-    [nf, _] = np.meshgrid(NF, np.linspace(1, T.shape[0], T.shape[0])-1, indexing='ij')
-    nf = nf.reshape(NF.shape[0], NF.shape[1], T.shape[0])
-    [_, fx] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FX, indexing='ij')
-    fx = fx.reshape(NF.shape[0], FX.shape[0], T.shape[0])
-    [_, fy] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FY, indexing='ij')
-    fy = fy.reshape(NF.shape[0], FY.shape[0], T.shape[0])
-    [_, fz] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FZ, indexing='ij')
-    fz = fz.reshape(NF.shape[0], FZ.shape[0], T.shape[0])
-    
-    FX = np.sum((fx*nf), axis=1)
-    FY = np.sum((fy*nf), axis=1)
-    FZ = np.sum((fz*nf), axis=1)
+    if len(NF)>0:
+        [_, nc] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,N3ph, indexing='ij')
+        nc = nc.reshape(NF.shape[0], N3ph.shape[0])    
+        N = np.sum(nc*NF, axis=1)/np.sum(NF, axis=1)    
+        N[np.where(np.sum(abs(nc*NF - N[:,np.newaxis]*NF), axis=1)>0)] = -1
+    else:        
+        N = np.array([])
         
-    return FX, FY, FZ
+    FX = []
+    FY = []
+    FZ = []
+    for NF1 in NF:
+                
+        [nf1, nt, nf2] = np.meshgrid(NF1, np.linspace(1, T.shape[0], T.shape[0])-1, NF1, indexing='ij')
+        FX1 = np.sum(fx*(1-nf2), axis=2)
+        FY1 = np.sum(fy*(1-nf2), axis=2)
+        FZ1 = np.sum(fz*(1-nf2), axis=2) 
+       
+        FX1 = np.sum((FX1*nf1[:,:,0]), axis=0)
+        FY1 = np.sum((FY1*nf1[:,:,0]), axis=0)
+        FZ1 = np.sum((FZ1*nf1[:,:,0]), axis=0)
+        
+        FX.append(FX1)
+        FY.append(FY1)
+        FZ.append(FZ1)
+        
+    
+    FX = np.array(FX)
+    FY = np.array(FY)
+    FZ = np.array(FZ)
+    
+        
+    # FX = np.sum(fx, axis=2)
+    # FY = np.sum(fy, axis=2)
+    # FZ = np.sum(fz, axis=2) 
+
+    # if len(NF)>0:
+
+    #     [nf, _] = np.meshgrid(NF, np.linspace(1, T.shape[0], T.shape[0])-1, indexing='ij')
+    #     nf = nf.reshape(NF.shape[0], NF.shape[1], T.shape[0])
+    #     [_, fx] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FX, indexing='ij')
+    #     fx = fx.reshape(NF.shape[0], FX.shape[0], T.shape[0])
+    #     [_, fy] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FY, indexing='ij')
+    #     fy = fy.reshape(NF.shape[0], FY.shape[0], T.shape[0])
+    #     [_, fz] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,FZ, indexing='ij')
+    #     fz = fz.reshape(NF.shape[0], FZ.shape[0], T.shape[0])      
+          
+    #     [_, nc] = np.meshgrid(np.linspace(1,NF.shape[0],NF.shape[0])-1  ,N3ph, indexing='ij')
+    #     nc = nc.reshape(NF.shape[0], N3ph.shape[0])
+        
+        
+    #     N = np.sum(nc*NF, axis=1)/np.sum(NF, axis=1)    
+    #     N[np.where(np.sum(abs(nc*NF - N[:,np.newaxis]*NF), axis=1)>0)] = -1
+       
+    #     FX = np.sum((fx*nf), axis=1)
+    #     FY = np.sum((fy*nf), axis=1)
+    #     FZ = np.sum((fz*nf), axis=1)
+    # else:
+    #     FX = np.array([])
+    #     FY = np.array([])
+    #     FZ = np.array([])
+    #     N = np.array([])
+        
+    return FX, FY, FZ, N
 
 def neumann3d(geometry : Geometry, excitation: Excitation):
     L = _neumann3d(
@@ -380,6 +420,8 @@ def _neumann3d(K, XS, XE, YS, YE, ZS, ZE, R, N3ph, NL):
     condZ = (L1x==0)*(L2x==0)*(L1y==0)*(L2y==0)*(L1z!=0)*(L2z!=0)#параллельные сегменты вдоль Z
     
     Self = 2*1e-7*( L*log( 2*L/R ) - L*1 )
+    Self[np.isinf(Self)]=0
+    Self[np.isnan(Self)]=0
     
        
     mutualx = +np.sign(k1*k2)*1* 1e-7*condX*( + ESx*log( ESx + ESxyz ) - ESxyz

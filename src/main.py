@@ -12,7 +12,7 @@ def main():
     def on_closing():
         print("exit")
         app.save()
-        root.destroy()
+        root.quit()
 
     root.protocol("WM_DELETE_WINDOW", on_closing)
 

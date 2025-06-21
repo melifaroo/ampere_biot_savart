@@ -340,19 +340,15 @@ def sample_shell_3phInf(L = 0.9, L1 = 0.7, L2 = 0.2, L3 = 0.3, L4 = 0.1, L5 = 0.
 def sample_input(XA = [ 1,  1,  1,  1], YA = [ 0, 0, 1, 1], ZA = [ 1, 0, 0, 1], 
                  XB = [ 0,  0,  0,  0], YB = [ 0, 0, 1, 1], ZB = [ 1, 0, 0, 1], 
                  XC = [-1, -1, -1, -1], YC = [ 0, 0, 1, 1], ZC = [ 1, 0, 0, 1], 
-                 RA = [0.02, 0.02, 0.02], RB = [0.02, 0.02, 0.02], RC = [0.02, 0.02, 0.02], 
-                 NFA = [[0, 1, 0]], NFB = [[0, 1, 0]], NFC = [[0, 1, 0]], 
+                 R = [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02], 
+                 NF = [[0, 1, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 1, 0]],
                  X = [ 1,  0, -1], Y = [-1, -1, -1], Z = [ 0,  0,  0]):
 
-    if (not( (len(XA)==len(YA)) & (len(XA)==len(ZA)) ) or 
-        not( (len(XB)==len(YB)) & (len(XB)==len(ZB)) ) or 
-        not( (len(XC)==len(YC)) & (len(XC)==len(ZC)) ) or
-        not( all( len(XA)==len(nFA)+1 for nFA in NFA) ) or
-        not( ( len(XA)==len(RA)+1 ) ) or
-        not( all( len(XB)==len(nFB)+1 for nFB in NFB) ) or
-        not( ( len(XB)==len(RB)+1 ) ) or
-        not( all( len(XC)==len(nFC)+1 for nFC in NFC) ) or
-        not( ( len(XC)==len(RC)+1 ) ) or
+    if (not(    (len(XA)==len(YA)) & (len(XA)==len(ZA)) ) or 
+        not(    (len(XB)==len(YB)) & (len(XB)==len(ZB)) ) or 
+        not(    (len(XC)==len(YC)) & (len(XC)==len(ZC)) ) or
+        not( all(len(XA)-1+len(XB)-1+len(XC)-1==len(NF1) for NF1 in NF) ) or
+        not(    (len(XA)-1+len(XB)-1+len(XC)-1==len(R) ) ) or
         not( ( len(X)==len(Y) ) & ( len(X)==len(Z) )  ) 
         ):
         raise Exception('Exit on error: Geometry definition error - Input vectors dimensions must agree')     
@@ -372,31 +368,12 @@ def sample_input(XA = [ 1,  1,  1,  1], YA = [ 0, 0, 1, 1], ZA = [ 1, 0, 0, 1],
     Y2  = np.array( YA[Eseg] + YB[Eseg] + YC[Eseg] )
     Z1  = np.array( ZA[Sseg] + ZB[Sseg] + ZC[Sseg] )
     Z2  = np.array( ZA[Eseg] + ZB[Eseg] + ZC[Eseg] )
-    Nph = np.array( [ 1]*segA   + [ 2]*segB  + [3]*segC ) 
-    R = np.array( RA + RB  + RC ) 
-    Nph = Nph-1
-
+    Nph = np.array( [1]*segA + [2]*segB + [3]*segC ) - 1
+    R   = np.array( R )
     X = np.array(X)
     Y = np.array(Y)
-    Z = np.array(Z)
-    
-    NF = np.array(NFA)
-    if len(NFA)>0:
-        if segB+segC>0:
-            NF = np.concatenate([  NFA, [[0]*(segB+segC)]*len(NFA) ], 1) 
-        
-    if len(NFB)>0:        
-        if len(NFA)>0:
-            NF = np.concatenate([ NF, np.concatenate([[[0]*(segA)     ]*len(NFB),   NFB, [[0]*(segC)]*len(NFB) if segC>0 else [[]]     ], 1) ],0)
-        else:
-            NF = np.concatenate([[[0]*(segA)     ]*len(NFB),   NFB, [[0]*(segC)]*len(NFB) if segC>0 else [[]]     ], 1) 
-      
-    if len(NFC)>0: 
-        if len(NFA)>0 or len(NFB)>0 :
-            NF = np.concatenate([ NF, np.concatenate([[[0]*(segA+segB)]*len(NFC),   NFC  ], 1) ],0)
-        else:
-            NF = np.concatenate([[[0]*(segA+segB)]*len(NFC),   NFC  ], 1)
-            
-    NL = np.stack( (Nph==0, Nph==1, Nph==2))
+    Z = np.array(Z)    
+    NF = np.array(NF)  
+    NL = np.stack( (Nph==0, Nph==1, Nph==2) )
     
     return Geometry(X1, X2, Y1, Y2, Z1, Z2, R, Nph, NF, X, Y, Z, NL)
