@@ -6,21 +6,20 @@ This project is an application designed to calculate ampere-forces, magnetic fie
 
 ```
 gui-current-control
-├── src
-│   ├── main.py                # Entry point of the application
-│   ├── gui
-│   │   ├── app.py             # Main application class
-│   │   ├── controls_geom.py   # Control panel for user inputs of geometry
-│   │   ├── controls_exct.py   # Control panel for user inputs of currents
-│   │   └── plot_geom.py       # Plotting panel for geometry
-│   │   └── plot_exct.py       # Plotting panel for currents
-│   ├── logic
-│   │   ├── excittion.py      # Current model
-│   │   └── geometry.py       # Geometry model
-│   │   └── solution.py       # Calculation logic
-│   │   └── presentation.py   # Results plotting
-│   └── utils
-│       └── formats.py        # Formats convertor utils
+├── main.py                # Entry point of the application (GUI)
+├── script.py              # Entry point of the application without GUI
+├── gui
+│   ├── controls_geom.py   # Control panel for user inputs of geometry
+│   ├── controls_exct.py   # Control panel for user inputs of currents
+│   ├── plot_geom.py       # Plotting panel for geometry
+│   └── plot_exct.py       # Plotting panel for currents
+├── logic
+│   ├── excittion.py      # Current model
+│   ├── geometry.py       # Geometry model
+│   ├── solution.py       # Calculation logic
+│   └── presentation.py   # Results plotting
+├── utils
+│   └── formats.py        # Formats convertor utils
 ├── requirements.txt          # Project dependencies
 └── README.md                 # Project documentation
 ```
@@ -44,7 +43,11 @@ To set up the project, follow these steps:
 
 To run the application, execute the following command:
 ```
-python src/main.py
+python main.py
+```
+OR
+```
+python script.py
 ```
 
 Once the application is running, you can:
