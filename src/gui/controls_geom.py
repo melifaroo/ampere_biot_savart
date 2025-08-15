@@ -701,13 +701,20 @@ class ControlGeomPanel(Frame):
                                 self.auto_econ_var.set(val=='True')
                             elif (key == self.FORC_CONN_VAR_NAME):
                                 self.forc_conn_var.set(val=='True')
-            if not forc_segs_var==None:                                          
-                for i in range(3):                               
-                    for j in range(M):                            
+                                       
+            for i in range(3):                               
+                for j in range(M):    
+                    if forc_segs_var==None: 
+                        self.forc_list_var[i*M+j].set( False )
+                        seg = len(self.geom_main_var[i*3+0].get().split(','))-1
+                        self.sgmt_forc_var[i*M+j].set( int_arr_to_str( [0] + [1]*(seg-2) + [0] ) )  
+                        
+                    else:                         
                         self.forc_list_var[i*M+j].set(forc_segs_var[i*M+j].get())    
                         if not forc_segs_var[i*M+j].get():
-                            XYZ = str_to_flt_arr(self.geom_main_var[i*3].get())
-                            self.sgmt_forc_var[i*M+j].set( value= int_arr_to_str( [0]*(len(XYZ)-1) ) )    
+                            seg = len(self.geom_main_var[i*3+0].get().split(','))-1
+                            self.sgmt_forc_var[i*M+j].set( int_arr_to_str( [0]*seg ) )  
+                            
                         
     def show_errors(self):       
         if self.status == self.STATUS_OK:

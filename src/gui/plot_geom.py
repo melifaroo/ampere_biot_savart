@@ -1,4 +1,7 @@
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['axes3d.mouserotationstyle'] = 'azel'  # 'azel', 'trackball', 'sphere', or 'arcball'
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import Frame
 import logic.presentation as presentation

@@ -15,6 +15,8 @@ class ControlExctPanel(Frame):
     DURATION_VAR_NAME       : Final = 'Duration'
     DISCRET_VAR_NAME        : Final = 'Discret'
     CURRENT_VAR_NAME        : Final = 'Current'
+    FREQ_VAR_NAME           : Final = 'Frequency'
+    ALPHA_VAR_NAME          : Final = 'Alpha'
     CURRENT_TYPE_VAR_NAME   : Final = 'Current_value_type'
     EXCT_TYPE_VAR_NAME      : Final = 'Source_type'
     K_OVERRIDE_VAL_VAR_NAME : Final = 'K_value_override'
@@ -71,6 +73,12 @@ class ControlExctPanel(Frame):
         self.duration_entry.bind("<KeyRelease>", self.on_change)
         self.duration_entry.pack(side= tk.RIGHT, expand=False, fill=tk.X)#grid(row=1, column=1)
         Label(panel, text="Duration T [ms]:").pack(side= tk.RIGHT)#.grid(row=1, column=0)
+                
+        panel = Frame(self)  
+        panel.pack(side = tk.TOP, expand=False, fill=tk.X)     
+        self.freq_menu = OptionMenu(panel, self.freq_var, 50, 60, command=self.on_change)
+        Label(panel, text="Frequency [Hz]:").pack(side=tk.RIGHT)#.grid(row=3, column=0)
+        self.freq_menu.pack(side=tk.RIGHT)#.grid(row=3, column=2)
         
         panel = Frame(self)  
         panel.pack(side = tk.TOP, expand=False, fill=tk.X)     
@@ -98,6 +106,14 @@ class ControlExctPanel(Frame):
         self.excitation_type_menu.pack(side=tk.RIGHT)#.grid(row=4, column=1)
         Label(panel, text="Excitation Type:").pack(side=tk.RIGHT)#.grid(row=4, column=0)
 
+        panel = Frame(self)  
+        panel.pack(side = tk.TOP, expand=False, fill=tk.X)     
+        state = "normal" if ( (self.excitation_type_var.get()==self.SRC_TYPE_GEN) ) else "disabled"
+        self.alpha_entry = Entry(panel, textvariable=self.alpha_var)
+        self.alpha_entry.bind("<KeyRelease>", self.on_change)
+        self.alpha_entry.config(validate="key", validatecommand=(self.register(float_input_validate), '%P'))
+        self.alpha_entry.pack(side=tk.RIGHT)#.grid(row=3, column=1)
+                
         panel = Frame(self)  
         panel.pack(side = tk.TOP, expand=False, fill=tk.X)     
         self.schema_menu = ttk.Combobox(panel, textvariable=self.schema_var, width = 16, values= [self.SCHEMA_A_BC, self.SCHEMA_C_AB, self.SCHEMA_B_AC], state = state )
@@ -139,8 +155,8 @@ class ControlExctPanel(Frame):
             geom = self.app.control_geom_panel.geometry
         valid = self.app.control_geom_panel.valid
         if  valid and not geom == None:
-            results = solution.solve(geom, self.exitation)  
-            presentation.plotResults(results) 
+            results = solution.solve(geom, self.exitation)
+            presentation.plotResults(results)
         else:
             self.app.control_geom_panel.show_errors()
         
@@ -171,7 +187,7 @@ class ControlExctPanel(Frame):
         
         asymK_value = str_to_flt(self.k_override_value_var.get()) if asymK_override else None
         
-        self.exitation = excitation.build(T, N, I, source_type = excitation_type, current=current_type)
+        self.exitation = excitation.build(T, N, I, source_type = excitation_type, current=current_type, alpha=str_to_flt(self.alpha_var.get())/180*3.1415, freq=str_to_flt(self.freq_var.get()))
         
         if  not geom == None:
             inductances = solution.evalBranchCurrents(geom, self.exitation, peakPhaseNumber = peakPhaseNumber , asymK_override = asymK_value)
@@ -189,8 +205,10 @@ class ControlExctPanel(Frame):
         f = open(file, "w")
         f.write( ''.join([self.DURATION_VAR_NAME, ' = ', self.duration_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.DISCRET_VAR_NAME, ' = ', self.discret_var.get() ]) ); f.write( '\n' )
+        f.write( ''.join([self.FREQ_VAR_NAME, ' = ', self.freq_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.CURRENT_VAR_NAME, ' = ', self.current_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.CURRENT_TYPE_VAR_NAME, ' = ', self.current_type_var.get() ]) ); f.write( '\n' )
+        f.write( ''.join([self.ALPHA_VAR_NAME, ' = ', self.alpha_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.EXCT_TYPE_VAR_NAME, ' = ', self.excitation_type_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.K_OVERRIDE_VAL_VAR_NAME, ' = ', self.k_override_value_var.get() ]) ); f.write( '\n' )
         f.write( ''.join([self.K_OVERRIDE_VAR_NAME, ' = ', 'True' if self.k_override_var.get() else 'False' ]) ); f.write( '\n' )
@@ -200,7 +218,9 @@ class ControlExctPanel(Frame):
     def init(self):        
         self.duration_var = StringVar()        
         self.discret_var = StringVar()        
-        self.current_var = StringVar()        
+        self.current_var = StringVar()     
+        self.alpha_var = StringVar()        
+        self.freq_var = StringVar()
         self.current_type_var = StringVar()   
         self.excitation_type_var = StringVar()        
         self.k_natural_value_var = StringVar()       
@@ -214,6 +234,8 @@ class ControlExctPanel(Frame):
         self.duration_var.set(value="20.0")        
         self.discret_var.set(value="21")        
         self.current_var.set(value="80.0")        
+        self.alpha_var.set(value="0.0")          
+        self.freq_var.set(value="60")        
         self.current_type_var.set(value=self.CUR_TYPE_PEAK)        
         self.excitation_type_var.set(value=self.SRC_TYPE_RLC)        
         self.k_natural_value_var.set(value="0.0")       
@@ -234,10 +256,14 @@ class ControlExctPanel(Frame):
                         self.discret_var.set(val)
                     elif (key == self.CURRENT_VAR_NAME):
                         self.current_var.set(val)
+                    elif (key == self.FREQ_VAR_NAME):
+                        self.freq_var.set(val)
                     elif (key == self.CURRENT_TYPE_VAR_NAME):
                         self.current_type_var.set(val)
                     elif (key == self.EXCT_TYPE_VAR_NAME):
-                        self.excitation_type_var.set(val)
+                        self.excitation_type_var.set(val)   
+                    if (key == self.ALPHA_VAR_NAME):
+                        self.alpha_var.set(val)
                     elif (key == self.K_OVERRIDE_VAL_VAR_NAME):
                         self.k_override_value_var.set(val)
                     elif (key == self.K_OVERRIDE_VAR_NAME):

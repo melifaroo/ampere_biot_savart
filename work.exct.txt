@@ -1,8 +1,10 @@
 Duration = 20
-Discret = 101
+Discret = 100
+Frequency = 50
 Current = 1
 Current_value_type = Peak
-Source_type = RLC 1Ph Circuit
+Alpha = 0
+Source_type = 3ph Generator
 K_value_override = 0.0
 K_override = True
 Schema = A(BC)

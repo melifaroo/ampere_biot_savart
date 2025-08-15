@@ -40,7 +40,7 @@ def float_input_validate(str):
         return True
     except ValueError:
         return False
-        
+            
 def positive_int_input_validate(str):        
     try:
         val = str_to_flt(str.strip())

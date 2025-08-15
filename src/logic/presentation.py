@@ -66,7 +66,7 @@ def annot_abs_max(x, f, ax: plt.Axes ):
         ax.annotate(text, xy=(xa[i], ya[i]),  **kw )
     
 def plotCurrent(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
-    ax.set_xlim([0,e.T[-1]])
+    ax.set_xlim([e.T[0],e.T[-1]])
     ax.grid(True)
     colors = ['r', 'b', 'g']; labels = ['A', 'B', 'C']
     C = e.I.shape[0]
@@ -87,8 +87,56 @@ def plotCurrent(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
     ax.set_ylabel("ток [кА] ", loc="top", labelpad=labelpad)
     ax.legend(labels[0:C], loc = 'upper right') 
     
-    annot_abs_max(e.T, e.I/1000, ax)
+    annot_abs_max(e.T[(e.T<20)*(e.T> 0)], e.I[:,(e.T<20)*(e.T> 0)]/1000, ax)
+    if (max(e.T)>40):
+        annot_abs_max(e.T[(e.T<40)*(e.T> 20)], e.I[:,(e.T<40)*(e.T> 20)]/1000, ax)
+    if (max(e.T)>60):
+        annot_abs_max(e.T[(e.T<60)*(e.T> 40)], e.I[:,(e.T<60)*(e.T> 40)]/1000, ax)
 
+def plotVoltagePhase(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
+    ax.set_xlim([e.TU[0],e.TU[-1]])
+    ax.grid(True)
+    colors = ['r', 'b', 'g']; labels = ['UA', 'UB', 'UC']
+    C = e.U.shape[0]
+
+    for i in range(C):
+        ax.plot(e.TU, e.U[i,:] ,colors[i]+'-', linewidth=2.0)
+            
+    if not fig == None:
+        renderer = fig.canvas.get_renderer()
+        tick_widths = [
+            label.get_window_extent(renderer).width for label in ax.get_yticklabels() if label.get_text()
+        ]
+        max_tick_width = max(tick_widths) if tick_widths else 0
+        labelpad = -max_tick_width-10   # Convert from points to inches
+    else:
+        labelpad = 0
+        
+    ax.set_ylabel("фазное напряжение [у.е.] ", loc="top", labelpad=labelpad)
+    ax.legend(labels[0:C], loc = 'upper right') 
+    
+    
+def plotVoltageLinear(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
+    ax.set_xlim([e.TU[0],e.TU[-1]])
+    ax.grid(True)
+    colors = ['r', 'b', 'g']; labels = ['Uab', 'Ubc', 'Uca']
+    C = e.U.shape[0]
+
+    for i in range(C):
+        ax.plot(e.TU, e.U[i,:]-e.U[(i+1)%C,:] ,colors[i]+'-', linewidth=2.0)
+            
+    if not fig == None:
+        renderer = fig.canvas.get_renderer()
+        tick_widths = [
+            label.get_window_extent(renderer).width for label in ax.get_yticklabels() if label.get_text()
+        ]
+        max_tick_width = max(tick_widths) if tick_widths else 0
+        labelpad = -max_tick_width-10   # Convert from points to inches
+    else:
+        labelpad = 0
+        
+    ax.set_ylabel("линейное напряжение [у.е.] ", loc="top", labelpad=labelpad)
+    ax.legend(labels[0:C], loc = 'upper right') 
 
 def field_colors( M ):
     cmap = mpl.cm.get_cmap('Set1')
@@ -106,7 +154,6 @@ def plotGeometry(g : Geometry, ax : plt.Axes):
     for x0, y0, z0, nc in zip(g.X, g.Y, g.Z, np.arange(0, M) ):
         ax.plot([x0], [y0], [z0], marker='d', color=colors[nc])
     
-    C = 1
     if len(g.NF)>0:            
         [_, nc] = np.meshgrid(np.linspace(1,g.NF.shape[0], g.NF.shape[0])-1  ,g.Nph, indexing='ij')
         nc = nc.reshape(g.NF.shape[0], g.Nph.shape[0])
@@ -124,16 +171,20 @@ def plotGeometry(g : Geometry, ax : plt.Axes):
             color = colors[c][r]
             for x1, y1, z1, x2, y2, z2, nc, a in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.Nph, g.NF[i]):           
                 if a:
-                    ax.plot([x1, x2], [y1, y2], [z1, z2], color=color, linewidth=9)
+                    ax.plot([x1, x2], [y1, y2], [z1, z2], color=color, alpha=0.7, linewidth=10, ls ="-")
     
+    C = int(max(g.Nph)-min(g.Nph)) + 1
+    sizeX = np.diff(ax.get_xlim())[0]
+    sizeY = np.diff(ax.get_ylim())[0]
+    sizeZ = np.diff(ax.get_zlim())[0]
+    size = ( sizeX**2 +  sizeY**2 +  sizeZ**2)**0.5
     for x1, y1, z1, x2, y2, z2, nc, ncprev, ncnext in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.Nph, np.concatenate(([-1],g.Nph[:-1])), np.concatenate((g.Nph[1:],[g.Nph[-1]+1])) ):
         color="rbg"[nc%3]
-        ax.plot([x1, x2], [y1, y2], [z1, z2], marker='o', color='k', linewidth=1, markersize = 3)
-        size = ( np.diff(ax.get_xlim())**2 +  np.diff(ax.get_xlim())**2 +  np.diff(ax.get_xlim())**2)**0.5
-        if(ncprev%C!=nc%C):
-            ax.quiver(x1, y1, z1, (x2-x1), (y2-y1), (z2-z1), color=color, pivot="tail", normalize=True, length = size[0]/5)       
-        if(ncnext%C!=nc%C):
-            ax.quiver(x2, y2, z2, (x2-x1), (y2-y1), (z2-z1), color=color, pivot="tip", normalize=True, length = size[0]/5)
+        ax.plot([x1, x2], [y1, y2], [z1, z2], marker='o', color='k'  , linewidth=1, markersize = 5)
+        ax.plot([x1, x2], [y1, y2], [z1, z2],             color=color, linewidth=2, ls=':')
+        l = (((x2-x1)/sizeX)**2 + ((y2-y1)/sizeY)**2 + ((z2-z1)/sizeZ)**2)**0.5
+        ax.quiver((x2+x1)/2, (y2+y1)/2, (z2+z1)/2, 0.01*(x2-x1)/l*sizeX, 0.01*(y2-y1)/l*sizeY, 0.01*(z2-z1)/l*sizeZ, fc='none', ec=color, ls='-', linewidth=2, arrow_length_ratio = 10, axlim_clip=False, normalize = False)
+
     
     
     ax.set_xlabel('X')
@@ -143,7 +194,7 @@ def plotGeometry(g : Geometry, ax : plt.Axes):
     #ax.set_aspect('equal') 
   
 
-def plotResults(res: Results):   
+def plotResults(res: Results, block = False):   
     #fields  
     M = res.fields.Bmag.shape[0]   
     if (M>0):
@@ -252,5 +303,6 @@ def plotResults(res: Results):
         window.wm_geometry("+0+0")
             
         fig.show()
+    plt.show(block=block)
         
         

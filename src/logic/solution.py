@@ -79,11 +79,14 @@ def evalBranchCurrents(geometry: Geometry, excitation : Excitation , peakPhaseNu
     if (excitation.current.ndim == 1):
         excitation.I = np.repeat(excitation.current[np.newaxis,:], repeats=N, axis=0) 
         excitation.I = np.multiply(excitation.I, excitation.K) 
+        excitation.U = np.repeat(excitation.voltage[np.newaxis,:], repeats=N, axis=0) 
     elif (N<3):         
         excitation.I = np.repeat(excitation.current[0,:][np.newaxis,:], repeats=N, axis=0)
         excitation.I = np.multiply(excitation.I, excitation.K) 
+        excitation.U = np.repeat(excitation.voltage[0,:][np.newaxis,:], repeats=N, axis=0)
     else:
-        excitation.I = np.roll(excitation.current, peakPhaseNumber, axis=0)
+        excitation.I = np.roll(excitation.current, 0, axis=0)
+        excitation.U = np.roll(excitation.voltage, 0, axis=0)
         
     return inductances
  
