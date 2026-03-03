@@ -22,10 +22,10 @@ class Excitation:
         self.TU = TU
         self.voltage = U
 
-def current_gen(T, Isc, omega, tau, alpha, phi):    
+def current_gen(T, Isc, omega, tau, alpha, phi):
     [j, t] = np.meshgrid([1,2,3], T, indexing='ij')
     return Isc*2**0.5*(sin( omega*t + alpha - phi - 2*pi/3 * (j - 1) ) - exp( -t / tau ) * sin( alpha - phi - 2*pi/3 * (j - 1) ) ) 
-    
+
 def current_rlc(t, I0, omega, tau, delta):
     return I0*exp(-(t-delta)/tau)*sin(omega*(t-delta))*(t>delta)
     

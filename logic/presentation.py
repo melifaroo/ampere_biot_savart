@@ -84,7 +84,7 @@ def plotCurrent(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
     else:
         labelpad = 0
         
-    ax.set_ylabel("ток [кА] ", loc="top", labelpad=labelpad)
+    ax.set_ylabel("current [kA] ", loc="top", labelpad=labelpad)
     ax.legend(labels[0:C], loc = 'upper right') 
     
     annot_abs_max(e.T[(e.T<20)*(e.T> 0)], e.I[:,(e.T<20)*(e.T> 0)]/1000, ax)
@@ -112,7 +112,7 @@ def plotVoltagePhase(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
     else:
         labelpad = 0
         
-    ax.set_ylabel("фазное напряжение [у.е.] ", loc="top", labelpad=labelpad)
+    ax.set_ylabel("phase voltage [a.u.] ", loc="top", labelpad=labelpad)
     ax.legend(labels[0:C], loc = 'upper right') 
     
     
@@ -135,7 +135,7 @@ def plotVoltageLinear(e : Excitation, ax : plt.Axes, fig : plt.Figure = None):
     else:
         labelpad = 0
         
-    ax.set_ylabel("линейное напряжение [у.е.] ", loc="top", labelpad=labelpad)
+    ax.set_ylabel("line voltage [a.u.] ", loc="top", labelpad=labelpad)
     ax.legend(labels[0:C], loc = 'upper right') 
 
 def field_colors( M ):
@@ -235,7 +235,7 @@ def plotResults(res: Results, block = False):
             max_tick_width = max(tick_widths) if tick_widths else 0
             labelpad = -max_tick_width-10   # Convert from points to inches
             
-            ax.set_ylabel("поле [мТл] ", loc="top", labelpad=labelpad); 
+            ax.set_ylabel("magn. field (B) [mT] ", loc="top", labelpad=labelpad); 
             ax.legend(labels, loc = 'lower right')   
             
             annot_abs_max(res.times, np.vstack((res.fields.Bmag[i,:], res.fields.Bax[i,:], res.fields.Btr[i,:]))*1000, ax) 
@@ -291,7 +291,7 @@ def plotResults(res: Results, block = False):
             max_tick_width = max(tick_widths) if tick_widths else 0
             labelpad = -max_tick_width-10   # Convert from points to inches
             
-            ax.set_ylabel("сила [кгс] ", loc="top", labelpad=labelpad); 
+            ax.set_ylabel("force [kgf] ", loc="top", labelpad=labelpad); 
             
             ax.legend(labels, loc = 'lower right')    
             
