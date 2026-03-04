@@ -17,32 +17,34 @@ class ControlGeomPanel(Frame):
     STATUS_OK : Final = "Geometry is OK!"
     STATUS_ERROR : Final = "Geometry contains errors!"
     SUBFIELD_SEPARATOR : Final = '.'
-    GEOM_VAR_NAME : Final = 'GEOM_MAIN'
-    FELD_VAR_NAME : Final = 'GEOM_FELD'
-    FORC_VAR_NAME : Final = 'SGMT_FORC'
-    RADI_VAR_NAME: Final =  'SGMT_RADI'
-    SAME_VAR_NAME : Final = 'SAME_GEOM'
-    PDST_VAR_NAME : Final = 'POLE_DIST'
-    PCNT_VAR_NAME: Final = 'PHASE_CNT'
-    CONN_VAR_NAME: Final = 'POLE_CONN'
+
+    GEOM_MAIN_VN : Final = 'GEOM_MAIN'
+    GEOM_FELD_VN : Final = 'GEOM_FELD'
+    MASK_FORC_VN : Final = 'SGMT_FORC'
+    MAIN_RADI_VN: Final =  'SGMT_RADI'
+    POLS_SAME_VN : Final = 'SAME_GEOM'
+    POLS_X_TR_VN : Final = 'POLE_DIST'
+    POLS__CNT_VN: Final = 'PHASE_CNT'
+    POLS_CONN_VN: Final = 'POLE_CONN'
     
-    AUTO_SRCE_VAR_NAME: Final = 'AUTO_SRCE'
-    AUTO_SPLT_VAR_NAME: Final = 'AUTO_SPLT'
-    AUTO_SHRT_VAR_NAME: Final = 'AUTO_SHRT'
-    AUTO_SCON_VAR_NAME: Final = 'AUTO_SCON'
-    AUTO_ECON_VAR_NAME: Final = 'AUTO_ECON'
-    FORC_CONN_VAR_NAME: Final = 'FORC_CONN'
-    RADI_CONN_VAR_NAME: Final = 'RADI_CONN'
+    AUTO_SRCE_VN: Final = 'AUTO_SRCE'
+    AUTO_SPLT_VN: Final = 'AUTO_SPLT'
+    AUTO_NEUT_VN: Final = 'AUTO_SHRT'
+
+    AUTO_SCON_VN: Final = 'AUTO_SCON'
+    AUTO_NCON_VN: Final = 'AUTO_ECON'
+    CONN_FORC_VN: Final = 'FORC_CONN'
+    CONN_RADI_VN: Final = 'RADI_CONN'
     
-    GEOM_SRCE_VAR_NAME: Final = 'GEOM_SRCE'
-    GEOM_SPLT_VAR_NAME: Final = 'GEOM_SPLT'
-    GEOM_SHRT_VAR_NAME: Final = 'GEOM_SHRT'
+    GEOM_SRCE_VN: Final = 'GEOM_SRCE'
+    GEOM_SPLT_VN: Final = 'GEOM_SPLT'
+    GEOM_NEUT_VN: Final = 'GEOM_SHRT'
     
-    GEOM_SCON_VAR_NAME: Final = 'GEOM_SCON'
-    GEOM_ECON_VAR_NAME: Final = 'GEOM_ECON'
+    GEOM_SCON_VN: Final = 'GEOM_SCON'
+    GEOM_NCON_VN: Final = 'GEOM_ECON'
             
-    AUTO_SROL_VAR_NAME: Final = 'AUTO_SROL'
-    AUTO_EROL_VAR_NAME: Final = 'AUTO_EROL'
+    AUTO_SROL_VN: Final = 'AUTO_SROL'
+    AUTO_EROL_VN: Final = 'AUTO_EROL'
      
     
     valid: bool = True
@@ -548,33 +550,59 @@ class ControlGeomPanel(Frame):
         N = str_to_int( self.pcnt_var.get() )
         sub = self.SUBFIELD_SEPARATOR
         f = open(file, "w")
-        f.write( '\n'.join([ '\n'.join([ ''.join([self.GEOM_VAR_NAME,sub,'ABC'[i],sub,'XYZ'[j],' = [', self.geom_main_var[i*3+j].get(), ']']) for j in range(3)                                    ]) for i in range(3)  ]) ); f.write( '\n' )
-        f.write( '\n'.join([ '\n'.join([ ''.join([self.FELD_VAR_NAME,sub,'ABC'[i],sub,'XYZ'[j],' = [', self.geom_feld_var[i*3+j].get(), ']']) for j in range(3)                                    ]) for i in range(3)  ]) ); f.write( '\n' )
-        f.write( '\n'.join([ '\n'.join([ ''.join([self.FORC_VAR_NAME,sub,'ABC'[i],sub,'%d' % j,' = [', self.sgmt_forc_var[i*M+j].get(), ']']) for j in range(M) if self.forc_list_var[i*M+j].get() ]) for i in range(3)  ]) ); f.write( '\n' )
-        f.write(             '\n'.join([ ''.join([self.RADI_VAR_NAME,sub,'ABC'[i],sub,         ' = [', self.sgmt_radi_var[i]    .get(), ']'])                                                         for i in range(3)  ]) ); f.write( '\n' )
-        f.write( ''.join([self.PDST_VAR_NAME,     ' = ',           self.pdst_var.get() ]) );                  f.write( '\n' )
-        f.write( ''.join([self.PCNT_VAR_NAME,     ' = ',           self.pcnt_var.get() ]) );                  f.write( '\n' )
-        f.write( ''.join([self.SAME_VAR_NAME,     ' = ', 'True' if self.same_var.get()      else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.CONN_VAR_NAME,     ' = ', 'True' if self.auto_conn_var.get() else 'False']) ); f.write( '\n' )
-        
-        
-        f.write( ''.join([self.AUTO_SRCE_VAR_NAME,' = ', 'True' if self.auto_srce_var.get() else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.AUTO_SPLT_VAR_NAME,' = ', 'True' if self.auto_splt_var.get() else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.AUTO_SHRT_VAR_NAME,' = ', 'True' if self.auto_shrt_var.get() else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.AUTO_SCON_VAR_NAME,' = ', 'True' if self.auto_scon_var.get() else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.AUTO_ECON_VAR_NAME,' = ', 'True' if self.auto_econ_var.get() else 'False']) ); f.write( '\n' )
-        f.write( ''.join([self.FORC_CONN_VAR_NAME,' = ', 'True' if self.forc_conn_var.get() else 'False']) ); f.write( '\n' )        
-        f.write( ''.join([self.RADI_CONN_VAR_NAME,' = ',           self.radi_conn_var.get() ]) );             f.write( '\n' )
-        
-        f.write( ''.join([self.GEOM_SRCE_VAR_NAME,' = [', ',\t'.join( [ self.geom_srce_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )  
-        f.write( ''.join([self.GEOM_SPLT_VAR_NAME,' = [', ',\t'.join( [ self.geom_splt_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )  
-        f.write( ''.join([self.GEOM_SHRT_VAR_NAME,' = [', ',\t'.join( [ self.geom_shrt_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )         
-        
-        f.write( '\n'.join([ '\n'.join([ ''.join([self.GEOM_SCON_VAR_NAME,sub,'ABCS'[i],sub,'XYZ'[j],' = [', self.geom_scon_var[i*3+j].get(), ']']) for j in range(3) ]) for i in range(4)  ]) ); f.write( '\n' ) 
-        f.write( '\n'.join([ '\n'.join([ ''.join([self.GEOM_ECON_VAR_NAME,sub, 'ABC'[i],sub,'XYZ'[j],' = [', self.geom_econ_var[i*3+j].get(), ']']) for j in range(3) ]) for i in range(3)  ]) ); f.write( '\n' ) 
+        f.write('\n'.join([ 
+                    '\n'.join([ 
+                        ''.join([self.GEOM_MAIN_VN,sub,'ABC'[i],sub,'XYZ'[j],' = [', self.geom_main_var[i*3+j].get(), ']'])
+                    for j in range(3) ])
+                for i in range(3)  ]) ); f.write( '\n' )
+        f.write('\n'.join([
+                    '\n'.join([
+                        ''.join([self.GEOM_FELD_VN,sub,'ABC'[i],sub,'XYZ'[j],' = [', self.geom_feld_var[i*3+j].get(), ']'])
+                    for j in range(3) ])
+                for i in range(3)  ]) ); f.write( '\n' )
+        f.write('\n'.join([
+                    '\n'.join([
+                        ''.join([self.MASK_FORC_VN,sub,'ABC'[i],sub,'%d' % j,' = [', self.sgmt_forc_var[i*M+j].get(), ']']) 
+                    for j in range(M) if self.forc_list_var[i*M+j].get() ]) 
+                for i in range(3)  ]) ); f.write( '\n' )
+        f.write('\n'.join([
+                        ''.join([self.MAIN_RADI_VN,sub,'ABC'[i],sub, ' = [', self.sgmt_radi_var[i].get(), ']']) 
+                for i in range(3)  ]) ); f.write( '\n' )
+        f.write( ''.join([self.POLS_X_TR_VN,     ' = ',           self.pdst_var.get() ]) );                  f.write( '\n' )
+        f.write( ''.join([self.POLS__CNT_VN,     ' = ',           self.pcnt_var.get() ]) );                  f.write( '\n' )
+        f.write( ''.join([self.POLS_SAME_VN,     ' = ', 'True' if self.same_var.get()      else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.POLS_CONN_VN,     ' = ', 'True' if self.auto_conn_var.get() else 'False']) ); f.write( '\n' )
                 
-        f.write( ''.join([self.AUTO_SROL_VAR_NAME,' = [', ',\t'.join( [ self.auto_srol_var[i].get() for i in range(4) ] ) , ']'] ) ) ; f.write( '\n' )       
-        f.write( ''.join([self.AUTO_EROL_VAR_NAME,' = [', ',\t'.join( [ self.auto_erol_var[i].get() for i in range(3) ] ) , ']'] ) ) ; f.write( '\n' )       
+        f.write( ''.join([self.AUTO_SRCE_VN,' = ', 'True' if self.auto_srce_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.AUTO_SPLT_VN,' = ', 'True' if self.auto_splt_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.AUTO_NEUT_VN,' = ', 'True' if self.auto_shrt_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.AUTO_SCON_VN,' = ', 'True' if self.auto_scon_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.AUTO_NCON_VN,' = ', 'True' if self.auto_econ_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.CONN_FORC_VN,' = ', 'True' if self.forc_conn_var.get() else 'False']) ); f.write( '\n' )
+        f.write( ''.join([self.CONN_RADI_VN,' = ',           self.radi_conn_var.get() ]) );             f.write( '\n' )
+        
+        f.write( ''.join([self.GEOM_SRCE_VN,' = [', 
+                    ',\t'.join( [ self.geom_srce_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )  
+        f.write( ''.join([self.GEOM_SPLT_VN,' = [',
+                    ',\t'.join( [ self.geom_splt_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )  
+        f.write( ''.join([self.GEOM_NEUT_VN,' = [',
+                    ',\t'.join( [ self.geom_shrt_var[0*3+j].get() for j in range(3)] ) , ']'] ) ) ; f.write( '\n' )         
+        
+        f.write('\n'.join([
+                    '\n'.join([
+                        ''.join([self.GEOM_SCON_VN,sub,'ABCS'[i],sub,'XYZ'[j],' = [', self.geom_scon_var[i*3+j].get(), ']'])
+                    for j in range(3) ])
+                for i in range(4)  ]) ); f.write( '\n' ) 
+        f.write('\n'.join([
+                    '\n'.join([
+                        ''.join([self.GEOM_NCON_VN,sub, 'ABC'[i],sub,'XYZ'[j],' = [', self.geom_econ_var[i*3+j].get(), ']'])
+                    for j in range(3) ])
+                for i in range(3)  ]) ); f.write( '\n' ) 
+                
+        f.write( ''.join([self.AUTO_SROL_VN,' = [',
+                    ',\t'.join( [ self.auto_srol_var[i].get() for i in range(4) ] ) , ']'] ) ) ; f.write( '\n' )       
+        f.write( ''.join([self.AUTO_EROL_VN,' = [',
+                    ',\t'.join( [ self.auto_erol_var[i].get() for i in range(3) ] ) , ']'] ) ) ; f.write( '\n' )       
         
         f.close()
        
@@ -611,7 +639,7 @@ class ControlGeomPanel(Frame):
         self.radi_conn_var = StringVar(value = '2')
         self.forc_conn_var = BooleanVar(value = True)
                 
-        #defaults:
+        #default sample geom:
         X: float = [  0.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ]      
         Y: float = [ -0.5, -0.5, -0.5, 0.1, 0.1, 0.1, 0.4, 0.4, 0.5, 0.5, 0.5 ]   
         Z: float = [  1.0,  0.4,  0.3, 0.3, 0.1, 0.0, 0.0, 0.1, 0.1, 0.5, 1.0 ]                       
@@ -627,8 +655,21 @@ class ControlGeomPanel(Frame):
               
         
     def load(self, file = "work.geom.txt"):       
-        M = self.MAX_FORCE_PER_PHASE
+        M = ControlGeomPanel.MAX_FORCE_PER_PHASE
         sub = self.SUBFIELD_SEPARATOR        
+
+        #default values, on case missing in file:
+        self.auto_conn_var.set(value = False)        
+        self.pcnt_var.set(value = '3')        
+        self.same_var.set(value = True)
+        self.pdst_var.set(value = '0.1')   
+        self.auto_srce_var.set(value = True)
+        self.auto_shrt_var.set(value = True)
+        self.auto_splt_var.set(value = True)
+        self.auto_econ_var.set(value = True)
+        self.auto_scon_var.set(value = True)    
+        self.radi_conn_var.set(value = '2')
+        self.forc_conn_var.set(value = False)
                        
         #try to load from file
         if os.path.exists(file):        
@@ -647,60 +688,60 @@ class ControlGeomPanel(Frame):
                             except ValueError:
                                 j = 'XYZ'.find(idx)
                                 
-                            if (nam == self.GEOM_VAR_NAME):
+                            if (nam == self.GEOM_MAIN_VN):
                                 self.geom_main_var[i*3+j].set(val)
-                            elif (nam == self.FELD_VAR_NAME):
+                            elif (nam == self.GEOM_FELD_VN):
                                 self.geom_feld_var[i*3+j].set(val)
-                            elif (nam == self.FORC_VAR_NAME):
+                            elif (nam == self.MASK_FORC_VN):
                                 self.sgmt_forc_var[i*M+j].set(val)
                                 if forc_segs_var == None:
                                     forc_segs_var = [BooleanVar(value = False) for i in range(M*3)]
                                 forc_segs_var[i*M+j].set(True)
-                            elif (nam == self.RADI_VAR_NAME):
+                            elif (nam == self.MAIN_RADI_VN):
                                 self.sgmt_radi_var[i].set(val)
                                 
-                            elif (nam == self.GEOM_SCON_VAR_NAME):
+                            elif (nam == self.GEOM_SCON_VN):
                                 self.geom_scon_var[i*3+j].set(val)
-                            elif (nam == self.GEOM_ECON_VAR_NAME):
+                            elif (nam == self.GEOM_NCON_VN):
                                 self.geom_econ_var[i*3+j].set(val)  
                         else:           
-                            if (key == self.GEOM_SRCE_VAR_NAME):
+                            if (key == self.GEOM_SRCE_VN):
                                 for i, v in enumerate(val.split(',\t')):
                                     self.geom_srce_var[i].set(v.strip())
-                            elif (key == self.GEOM_SPLT_VAR_NAME):
+                            elif (key == self.GEOM_SPLT_VN):
                                 for i, v in enumerate(val.split(',\t')):
                                     self.geom_splt_var[i].set(v.strip())
-                            elif (key == self.GEOM_SHRT_VAR_NAME):
+                            elif (key == self.GEOM_NEUT_VN):
                                 for i, v in enumerate(val.split(',\t')):
                                     self.geom_shrt_var[i].set(v.strip())
-                            elif (key == self.AUTO_SROL_VAR_NAME):
+                            elif (key == self.AUTO_SROL_VN):
                                 for i, v in enumerate(val.split(',\t')):
                                     self.auto_srol_var[i].set(v.strip())
-                            elif (key == self.AUTO_EROL_VAR_NAME):
+                            elif (key == self.AUTO_EROL_VN):
                                 for i, v in enumerate(val.split(',\t')):
-                                    self.auto_erol_var[i].set(v.strip())                                         
-                            elif (key == self.PDST_VAR_NAME):
+                                    self.auto_erol_var[i].set(v.strip())
+                            elif (key == self.POLS_X_TR_VN):
                                 self.pdst_var.set(val)
-                            elif (key == self.PCNT_VAR_NAME):
+                            elif (key == self.POLS__CNT_VN):
                                 self.pcnt_var.set(val)
-                            elif (key == self.RADI_CONN_VAR_NAME):
-                                self.radi_conn_var.set(val)
-                            elif (key == self.SAME_VAR_NAME):
+                            elif (key == self.POLS_SAME_VN):
                                 self.same_var.set(val=='True')
-                            elif (key == self.CONN_VAR_NAME):
+                            elif (key == self.POLS_CONN_VN):
                                 self.auto_conn_var.set(val=='True')
-                            elif (key == self.AUTO_SRCE_VAR_NAME):
-                                self.auto_srce_var.set(val=='True')
-                            elif (key == self.AUTO_SPLT_VAR_NAME):
-                                self.auto_splt_var.set(val=='True')
-                            elif (key == self.AUTO_SHRT_VAR_NAME):
-                                self.auto_shrt_var.set(val=='True')
-                            elif (key == self.AUTO_SCON_VAR_NAME):
-                                self.auto_scon_var.set(val=='True')
-                            elif (key == self.AUTO_ECON_VAR_NAME):
-                                self.auto_econ_var.set(val=='True')
-                            elif (key == self.FORC_CONN_VAR_NAME):
+                            elif (key == self.CONN_FORC_VN):
                                 self.forc_conn_var.set(val=='True')
+                            elif (key == self.CONN_RADI_VN):
+                                self.radi_conn_var.set(val)
+                            elif (key == self.AUTO_SRCE_VN):
+                                self.auto_srce_var.set(val=='True')
+                            elif (key == self.AUTO_SPLT_VN):
+                                self.auto_splt_var.set(val=='True')
+                            elif (key == self.AUTO_NEUT_VN):
+                                self.auto_shrt_var.set(val=='True')
+                            elif (key == self.AUTO_SCON_VN):
+                                self.auto_scon_var.set(val=='True')
+                            elif (key == self.AUTO_NCON_VN):
+                                self.auto_econ_var.set(val=='True')
                                        
             for i in range(3):                               
                 for j in range(M):    
@@ -770,71 +811,80 @@ class ControlGeomPanel(Frame):
         M = ControlGeomPanel.MAX_FORCE_PER_PHASE
         P = str_to_int(self.pcnt_var.get())
         extra = self.auto_conn_var.get()
-        
-        NS  = [  length_str_arr(self.geom_main_var[k].get()) for k in range(3*3) ]
-        NSX = [  length_str_arr(self.geom_scon_var[k].get()) for k in range(3*4) ]
-        NGX = [  length_str_arr(self.geom_econ_var[k].get()) for k in range(3*3) ]
-
         N = "ABC".find(self.schema[0]) if (P == 3 and not self.schema == "ABC") else -1
         
-        XYZABC = [ [0] for _ in range(3*3) ]
+        conductors = []
         for i in range(P):
-            for j in range(3):
-                XYZABC[i*3+j] = str_to_flt_arr(
-                    ( ( ( (     self.geom_splt_var[0*3+j].get()   + ("," if NSX[3*3+j]>0 else "") + self.geom_scon_var[3*3+j].get() + ","  ) if i == N else "") +
-                        (       self.geom_srce_var[0*3+j].get()       if N<0 or i == N else         self.geom_splt_var[0*3+j].get() ) 
-                                                                  + ("," if NSX[i*3+j]>0 else "") + self.geom_scon_var[i*3+j].get() + "," ) if extra else "" ) +                     
-                                self.geom_main_var[i*3+j].get() +                     
-                    ( ( "," +   self.geom_econ_var[i*3+j].get()   + ("," if NGX[i*3+j]>0 else "") + self.geom_shrt_var[0*3+j].get()   ) if extra else "" ) 
-                    )
+            main = geometry.Conductor(
+                str_to_flt_arr(self.geom_main_var[i*3+0].get()),
+                str_to_flt_arr(self.geom_main_var[i*3+1].get()),
+                str_to_flt_arr(self.geom_main_var[i*3+2].get()),
+                i,
+                [ str_to_int_arr(self.sgmt_forc_var[k*M+j].get()) for j in range(M) if self.forc_list_var[i*M+j].get() ],                
+                str_to_flt_arr(self.sgmt_radi_var[i].get())
+            )
+            conductors.append(main)
+            if extra:
+                sX = [str_to_flt( self.geom_shrt_var[0*3+0].get() )]
+                sY = [str_to_flt( self.geom_shrt_var[0*3+1].get() )]
+                sZ = [str_to_flt( self.geom_shrt_var[0*3+2].get() )]
+
+                phase_neut_conn = geometry.Conductor(
+                    np.concatenate(( [main.X[-1]], str_to_flt_arr(self.geom_econ_var[i*3+0].get()), sX  )) ,
+                    np.concatenate(( [main.Y[-1]], str_to_flt_arr(self.geom_econ_var[i*3+1].get()), sY  )) ,
+                    np.concatenate(( [main.Z[-1]], str_to_flt_arr(self.geom_econ_var[i*3+2].get()), sZ  )) ,
+                    i,
+                    1 if self.forc_conn_var.get() else [],                
+                    str_to_flt(self.radi_conn_var.get())
+                ) 
+                conductors.append(phase_neut_conn)
                 
-        R = []       
-        for i in range(P):
-            R = R + str_to_flt_arr(
-                ( ( (   ( ",".join( [ self.radi_conn_var.get() for _ in range(NSX[3*3+0]+1) ] ) + ","  ) if i == N else "") +
-                    (   ( ",".join( [ self.radi_conn_var.get() for _ in range(NSX[i*3+0]+1) ] ) + ","  ) ) ) if extra else "" ) + 
-                                      self.sgmt_radi_var[i] .get() +                                
-                ( ( "," + ",".join( [ self.radi_conn_var.get() for _ in range(NGX[i*3+0]+1) ] ) ) if extra else "" )
-                , 0.01)     
-            
-        NF = []
-        for i in range(P):
-            for j in range(M):
-                if self.forc_list_var[i*M+j].get():     
-                    NF1 = []           
-                    for k in range(P):
-                        if k == i:
-                           NF1.extend( str_to_int_arr(                
-                                ( ( (   ( ",".join( [ "0" for _ in range(NSX[3*3+0]+1) ] ) + ","  ) if k == N else "") +
-                                    (   ( ",".join( [ "0" for _ in range(NSX[k*3+0]+1) ] ) + ","  ) ) ) if extra else "" ) +                   
-                                                self.sgmt_forc_var[k*M+j].get() +    
-                                ( ( "," + ",".join( [ "0" for _ in range(NGX[k*3+0]+1) ] ) ) if extra else "" ) ) ) 
-                        else:
-                           NF1.extend( [0]*( ( ( ( (NSX[3*3+0]+1) if k == N else 0 ) + (NSX[k*3+0]+1) ) if extra else 0 ) + (NS [k*3+0]-1) + ( (NGX[k*3+0]+1) if extra else 0 ) ) ) 
-                    if (sum(NF1)>0):
-                        NF.append(NF1)
-            
-        if (self.forc_conn_var.get() and extra):            
-            NF1 = []       
-            for k in range(P):
-                NF1.extend( [0]*( ( ( (NSX[3*3+0]+1) if k == N else 0 ) if extra else 0 ) + ( (NSX[k*3+0]+1) if extra else 0 ) + (NS [k*3+0]-1) ) + [1]*( (NGX[k*3+0]+1) if extra else 0 ) ) 
-            if any( nf1 == 1 for nf1 in NF1 ):
-                NF.append(NF1)
-            # NF1 = [] 
-            # if N>0:
-            #     for k in range(P):
-            #             NF1.extend( [0]*( ( ( (NSX[3*3+0]+1) if k == N else 0 ) if extra else 0 ) ) + [1]*( (NSX[k*3+0]+1) if extra else 0 ) + [0]*( (NS [k*3+0]-1) + (NGX[k*3+0]+1) if extra else 0 ) ) 
-            # if any( nf1 == 1 for nf1 in NF1 ):
-            #     NF.append(NF1)
-                 
+                sX = [str_to_flt( self.geom_srce_var[0*3+0].get() if N<0 or i == N else self.geom_splt_var[0*3+0].get() )]
+                sY = [str_to_flt( self.geom_srce_var[0*3+1].get() if N<0 or i == N else self.geom_splt_var[0*3+1].get() )]
+                sZ = [str_to_flt( self.geom_srce_var[0*3+2].get() if N<0 or i == N else self.geom_splt_var[0*3+2].get() )]
+                sF = [] if N<0 or i == N else 1 if self.forc_conn_var.get() else []
+
+                phase_srce_conn = geometry.Conductor(
+                    np.concatenate(( sX, str_to_flt_arr(self.geom_scon_var[i*3+0].get()), [main.X[0]] )) ,
+                    np.concatenate(( sY, str_to_flt_arr(self.geom_scon_var[i*3+1].get()), [main.Y[0]] )) ,
+                    np.concatenate(( sZ, str_to_flt_arr(self.geom_scon_var[i*3+2].get()), [main.Z[0]] )) ,
+                    i,
+                    sF,                
+                    str_to_flt(self.radi_conn_var.get())
+                ) 
+                conductors.append(phase_srce_conn)
+                
+                if i == N:
+                    phase_srce_conn = geometry.Conductor(
+                        np.concatenate(( 
+                            [str_to_flt(self.geom_splt_var[0*3+0].get())], 
+                            str_to_flt_arr(self.geom_scon_var[3*3+0].get()), 
+                            [str_to_flt(self.geom_srce_var[0*3+0].get())] )) ,
+                        np.concatenate(( 
+                            [str_to_flt(self.geom_splt_var[0*3+1].get())], 
+                            str_to_flt_arr(self.geom_scon_var[3*3+1].get()), 
+                            [str_to_flt(self.geom_srce_var[0*3+1].get())] )) ,
+                        np.concatenate(( 
+                            [str_to_flt(self.geom_splt_var[0*3+2].get())], 
+                            str_to_flt_arr(self.geom_scon_var[3*3+2].get()), 
+                            [str_to_flt(self.geom_srce_var[0*3+2].get())] )) ,
+                        i,
+                        [],
+                        str_to_flt(self.radi_conn_var.get())
+                    ) 
+                    conductors.append(phase_srce_conn)
+
+
         XYZ = [ [] for i in range(3) ]
         for j in range(3):
             for i in range(P):
                 XYZ[j] = XYZ[j] + str_to_flt_arr(self.geom_feld_var[i*3+j].get())       
-    
-        return geometry.sample_input(
-                XA = XYZABC[0*3+0], YA = XYZABC[0*3+1], ZA = XYZABC[0*3+2],    
-                XB = XYZABC[1*3+0], YB = XYZABC[1*3+1], ZB = XYZABC[1*3+2],    
-                XC = XYZABC[2*3+0], YC = XYZABC[2*3+1], ZC = XYZABC[2*3+2],               
-                R = R, NF = NF, X = XYZ[0] , Y = XYZ[1] , Z = XYZ[2]                
-                )     
+
+
+        filedPoints = geometry.WayPoints()
+        for i in range(P):
+            filedPoints.X = np.append( filedPoints.X, str_to_flt_arr(self.geom_feld_var[i*3+0].get())  )
+            filedPoints.Y = np.append( filedPoints.Y, str_to_flt_arr(self.geom_feld_var[i*3+1].get())  )
+            filedPoints.Z = np.append( filedPoints.Z, str_to_flt_arr(self.geom_feld_var[i*3+2].get())  )
+
+        return geometry.fromConductorsWP( conductors ,filedPoints )

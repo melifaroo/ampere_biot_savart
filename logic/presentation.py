@@ -155,11 +155,11 @@ def plotGeometry(g : Geometry, ax : plt.Axes):
         ax.plot([x0], [y0], [z0], marker='d', color=colors[nc])
     
     if len(g.NF)>0:            
-        [_, nc] = np.meshgrid(np.linspace(1,g.NF.shape[0], g.NF.shape[0])-1  ,g.Nph, indexing='ij')
-        nc = nc.reshape(g.NF.shape[0], g.Nph.shape[0])
+        [_, nc] = np.meshgrid(np.linspace(1,g.NF.shape[0], g.NF.shape[0])-1  ,g.NP, indexing='ij')
+        nc = nc.reshape(g.NF.shape[0], g.NP.shape[0])
         N = np.sum(nc*g.NF, axis=1)/np.sum(g.NF, axis=1)    
         N[np.where(np.sum(abs(nc*g.NF - N[:,np.newaxis]*g.NF), axis=1)>0)] = -1
-        
+        N[np.where(np.isnan(N))] = -1
         C = int(max(N)-min(N)) + 1
         C0 = int(min(N))
                 
@@ -169,17 +169,17 @@ def plotGeometry(g : Geometry, ax : plt.Axes):
             c = int(N[i])-C0
             r = int((N[:i]==N[i]).sum())        
             color = colors[c][r]
-            for x1, y1, z1, x2, y2, z2, nc, a in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.Nph, g.NF[i]):           
+            for x1, y1, z1, x2, y2, z2, nc, a in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.NP, g.NF[i]):           
                 if a:
                     ax.plot([x1, x2], [y1, y2], [z1, z2], color=color, alpha=0.7, linewidth=10, ls ="-")
     
-    C = int(max(g.Nph)-min(g.Nph)) + 1
+    C = g.getCircuitPhaseCount() #int(max(g.NP)-min(g.NP)) + 1
     sizeX = np.diff(ax.get_xlim())[0]
     sizeY = np.diff(ax.get_ylim())[0]
     sizeZ = np.diff(ax.get_zlim())[0]
     size = ( sizeX**2 +  sizeY**2 +  sizeZ**2)**0.5
-    for x1, y1, z1, x2, y2, z2, nc, ncprev, ncnext in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.Nph, np.concatenate(([-1],g.Nph[:-1])), np.concatenate((g.Nph[1:],[g.Nph[-1]+1])) ):
-        color="rbg"[nc%3]
+    for x1, y1, z1, x2, y2, z2, nc, ncprev, ncnext in zip(g.XS, g.YS, g.ZS, g.XE, g.YE, g.ZE, g.NP, np.concatenate(([-1],g.NP[:-1])), np.concatenate((g.NP[1:],[g.NP[-1]+1])) ):
+        color="rbg"[int(nc)%3]
         ax.plot([x1, x2], [y1, y2], [z1, z2], marker='o', color='k'  , linewidth=1, markersize = 5)
         ax.plot([x1, x2], [y1, y2], [z1, z2],             color=color, linewidth=2, ls=':')
         l = (((x2-x1)/sizeX)**2 + ((y2-y1)/sizeY)**2 + ((z2-z1)/sizeZ)**2)**0.5

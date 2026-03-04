@@ -103,7 +103,7 @@ def biotsavart3d(geometry : Geometry, excitation : Excitation):
         geometry.YE, 
         geometry.ZS,
         geometry.ZE, 
-        geometry.Nph,
+        geometry.NP,
         geometry.X,
         geometry.Y,
         geometry.Z)
@@ -200,7 +200,7 @@ def ampere3d(geometry : Geometry, excitation : Excitation):
         geometry.ZS,
         geometry.ZE,
         geometry.R,
-        geometry.Nph,
+        geometry.NP,
         geometry.NF)
     return Forces(Fx, Fy, Fz, N)
 
@@ -245,10 +245,11 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     ES = ( ESx**2 + ESy**2 + ESz**2 )**(1/2)
     EE = ( EEx**2 + EEy**2 + EEz**2 )**(1/2)
     SE = ( SEx**2 + SEy**2 + SEz**2 )**(1/2)
-                      
-    condX = (L1x!=0)*(L2x!=0)*(L1y==0)*(L2y==0)*(L1z==0)*(L2z==0)#параллельные сегменты вдоль X  
-    condY = (L1x==0)*(L2x==0)*(L1y!=0)*(L2y!=0)*(L1z==0)*(L2z==0)#параллельные сегменты вдоль Y  
-    condZ = (L1x==0)*(L2x==0)*(L1y==0)*(L2y==0)*(L1z!=0)*(L2z!=0)#параллельные сегменты вдоль Z
+
+    # parallel segments interaction
+    condX = (L1x!=0)*(L2x!=0)*(L1y==0)*(L2y==0)*(L1z==0)*(L2z==0) # filter segments along X
+    condY = (L1x==0)*(L2x==0)*(L1y!=0)*(L2y!=0)*(L1z==0)*(L2z==0) # filter segments along Y
+    condZ = (L1x==0)*(L2x==0)*(L1y==0)*(L2y==0)*(L1z!=0)*(L2z!=0) # filter segments along Z
     fx1 = + (SE-SS+ES-EE)*SSx*(condZ/( SSy**2 + SSx**2 ) + condY/( SSz**2 + SSx**2 ))
     fy1 = + (SE-SS+ES-EE)*SSy*(condZ/( SSy**2 + SSx**2 ) + condX/( SSz**2 + SSy**2 ))
     fz1 = + (SE-SS+ES-EE)*SSz*(condY/( SSz**2 + SSx**2 ) + condX/( SSz**2 + SSy**2 ))
@@ -260,12 +261,13 @@ def _ampere3d(T, I, XS, XE, YS, YE, ZS, ZE, R, N3ph, NF):
     fy1[np.isinf(fy1)]=0
     fz1[np.isinf(fz1)]=0
     
-    condXY = (L1x!=0)*(L1y==0)*(L1z==0)*   (L2x==0)*(L2y!=0)*(L2z==0) 
+    # crossed Segments interaction
+    condXY = (L1x!=0)*(L1y==0)*(L1z==0)*   (L2x==0)*(L2y!=0)*(L2z==0) # filter segments pairs
     condXZ = (L1x!=0)*(L1y==0)*(L1z==0)*   (L2x==0)*(L2y==0)*(L2z!=0) 
     condYX = (L1x==0)*(L1y!=0)*(L1z==0)*   (L2x!=0)*(L2y==0)*(L2z==0) 
     condYZ = (L1x==0)*(L1y!=0)*(L1z==0)*   (L2x==0)*(L2y==0)*(L2z!=0) 
     condZX = (L1x==0)*(L1y==0)*(L1z!=0)*   (L2x!=0)*(L2y==0)*(L2z==0) 
-    condZY = (L1x==0)*(L1y==0)*(L1z!=0)*   (L2x==0)*(L2y!=0)*(L2z==0)  #скрещенные сегменты
+    condZY = (L1x==0)*(L1y==0)*(L1z!=0)*   (L2x==0)*(L2y!=0)*(L2z==0)
 
     fx2 = (condZX+condYX)*( log( caf(SS,SSx,r_2) ) - log( caf(ES,ESx,r_2) ) - log( caf(SE,SEx,r_2) ) + log( caf(EE,EEx,r_2) )) 
     fy2 = (condXY+condZY)*( log( caf(SS,SSy,r_2) ) - log( caf(ES,ESy,r_2) ) - log( caf(SE,SEy,r_2) ) + log( caf(EE,EEy,r_2) )) 
@@ -361,7 +363,7 @@ def neumann3d(geometry : Geometry, excitation: Excitation):
         geometry.ZS,
         geometry.ZE, 
         geometry.R,
-        geometry.Nph,
+        geometry.NP,
         geometry.NL
         )
     return Inductances(L)
