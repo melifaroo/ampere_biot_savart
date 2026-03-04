@@ -812,7 +812,7 @@ class ControlGeomPanel(Frame):
         P = str_to_int(self.pcnt_var.get())
         extra = self.auto_conn_var.get()
         N = "ABC".find(self.schema[0]) if (P == 3 and not self.schema == "ABC") else -1
-        
+
         conductors = []
         for i in range(P):
             main = geometry.Conductor(
@@ -820,7 +820,7 @@ class ControlGeomPanel(Frame):
                 str_to_flt_arr(self.geom_main_var[i*3+1].get()),
                 str_to_flt_arr(self.geom_main_var[i*3+2].get()),
                 i,
-                [ str_to_int_arr(self.sgmt_forc_var[k*M+j].get()) for j in range(M) if self.forc_list_var[i*M+j].get() ],                
+                [ str_to_int_arr(self.sgmt_forc_var[i*M+j].get()) for j in range(M) if self.forc_list_var[i*M+j].get() ],                
                 str_to_flt_arr(self.sgmt_radi_var[i].get())
             )
             conductors.append(main)
